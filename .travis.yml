@@ -10,6 +10,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
+  - chmod +x install_env.sh
   - ./install_env.sh
 # command to run tests
 script:
