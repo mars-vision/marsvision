@@ -1,6 +1,6 @@
 #!/bin/bash
 conda create --name marsvision
-source activate computer-vision
+source activate marsvision
 conda install -y --quiet --yes numpy pandas pytorch pytest pytest-cov
 conda install -y --quiet --yes pillow tensorboard
 conda install -y --quiet --yes torchvision mypy scipy
