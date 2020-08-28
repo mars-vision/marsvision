@@ -15,8 +15,8 @@ install:
 # command to run tests
 script:
   - python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning
-  - cd docs
-  - make html
+  #- cd docs
+  #- make html
   - cd ..
 after_success:
   - coveralls
