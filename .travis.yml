@@ -14,9 +14,10 @@ install:
   - ./install_env.sh
 # command to run tests
 script:
+  - source activate marsvision
   - python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning
-  #- cd docs
-  #- make html
+  - cd docs
+  - make html
   - cd ..
 after_success:
   - coveralls
