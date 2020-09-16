@@ -25,22 +25,20 @@ class FeatureExtractor:
         points = self.getKeypointPoints(img)
         r = 20
 
-        # try averaging values for each keypoint instead
+        # todo: try averaging values for each keypoint instead
         # in a single vector
-        
-        featureMatrix = np.zeros((4, len(points)))
-        for p in points:
-            roi = self.selectROI(img, p, r)
+        featureMatrix = np.empty((len(points), 4))
+        for i in range(len(points)):
+            roi = self.selectROI(img, points[i], r)
             canny = cv2.Canny(roi, 50, 100)
-            lapl = cv2.Laplacian(img, cv2.CV_64F)
+            lapl = cv2.Laplacian(roi, cv2.CV_64F)
             vector = [
                 np.mean(canny),
                 np.var(canny),
                 np.mean(lapl),
                 np.var(lapl)
             ]
-            print(vector)
-            np.append(featureMatrix, vector)
+            featureMatrix[i] = vector
         return featureMatrix
             
         

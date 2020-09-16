@@ -1,11 +1,12 @@
-from FeatureExtractor import FeatureExtractor
+from marsvision.pipeline import FeatureExtractor
 import cv2
 import os
+import numpy as np
 
-
-filepath = os.path.join("img", "marsface")
+dirname = os.path.dirname(__file__)
+filepath = os.path.join(dirname, "img", "marsface.jpg")
 detector  = cv2.KAZE_create()
-extractor = FeatureExtractor(detector)
 img = cv2.imread(filepath)
+extractor = FeatureExtractor(detector)
 features = extractor.extractFeatures(img)
-print(features)
+print(features, np.shape(features))
