@@ -2,6 +2,3 @@
 .coverage
 .coverage.*
 .pytest_cache/
-
-# Dataset
-dataset/
