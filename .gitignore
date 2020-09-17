@@ -1,0 +1,4 @@
+# Unit test / coverage reports
+.coverage
+.coverage.*
+.pytest_cache/
