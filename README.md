@@ -9,4 +9,4 @@ marsvision
 Documentation
 -------------
 
-The documentation for ``marsvision`` is available [here](https://marsvision.github.io/marsvision/build/index.html).
+The documentation for ``marsvision`` is available [here](https://dpalencia.github.io/marsvision/build/index.html).
