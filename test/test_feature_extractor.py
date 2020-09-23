@@ -1,4 +1,3 @@
-# Test cases for feature extractor
 from unittest import TestCase
 from marsvision.pipeline import FeatureExtractor
 import cv2
