@@ -3,6 +3,5 @@ from marsvision.utilities import DataLoader
 
 class TestDataLoader(TestCase):
     def setUp(self):
-        
         self.assertTrue(True)
         
