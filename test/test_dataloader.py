@@ -1,7 +1,8 @@
 from unittest import TestCase
-from marsvision.utilities import dataloader
+from marsvision.utilities import DataLoader
 
-class TestFeatureExtractor(TestCase):
-    def test_mars_face(self):
+class TestDataLoader(TestCase):
+    def setUp(self):
+        
         self.assertTrue(True)
         

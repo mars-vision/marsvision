@@ -3,6 +3,7 @@ import cv2
 # Constructor:
 # Keypoint detector
 class FeatureExtractor:
+    # TODO: Refactor this to use img as a field instead of passing it around functions.
     def __init__(self, detector):
         self.alg = detector
 
