@@ -6,9 +6,8 @@ import pandas as pd
 from marsvision.pipeline import FeatureExtractor
 
 class DataLoader:
-    def __init__(self, inPath, outPath, className = None):
+    def __init__(self, inPath, outPath = os.getcwd(), className = None):
         self.className = className
-        print(outPath)
         self.outPath = os.path.join(outPath, "output_features.csv")
         self.inPath = inPath
 
@@ -27,13 +26,18 @@ class DataLoader:
                     images.append(cv2.imread(os.path.join(root, file)))
         self.images = images
 
+    def data_transformer(self):
+        # Use the feature extractor to produce 
+        # a list of feature vectors.
+        detector  = cv2.ORB_create()
+        extractor = FeatureExtractor(detector)
+        self.featureList = [extractor.extract_means(image) for image in self.images]
+        
+
     def data_writer(self):
         # Write features to CSV with path names.
         # Use the feature extractor to retrieve features from images.
-        detector  = cv2.ORB_create()
-        extractor = FeatureExtractor(detector)
-        featureList = [extractor.extract_means(image) for image in self.images]
-        df = pd.DataFrame(data = featureList)
+        df = pd.DataFrame(data = self.featureList)
         df["class"] = className
         df.to_csv(self.outPath, mode="a")
 
