@@ -20,7 +20,6 @@ class TestDataLoader(TestCase):
            cv2.imread(os.path.join(self.test_image_path, "ESP_056891_0940_RED.NOMAP.browse-Block-9.jpg")),
         ] 
         self.loader.data_reader()
-        print(expected_loaded_images)
         self.assertTrue(np.array_equal(expected_loaded_images, self.loader.images))
         
         
