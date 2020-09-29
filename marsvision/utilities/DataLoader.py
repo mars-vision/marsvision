@@ -13,6 +13,7 @@ class DataLoader:
 
     def run(self):
         self.data_reader()
+        self.data_transformer()
         self.data_writer()
 
     def data_reader(self):
