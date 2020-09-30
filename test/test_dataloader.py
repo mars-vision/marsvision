@@ -22,4 +22,4 @@ class TestDataLoader(TestCase):
         self.loader.data_reader()
         self.assertTrue(np.array_equal(expected_loaded_images, self.loader.images))
         
-        
+
