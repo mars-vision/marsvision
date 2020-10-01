@@ -40,7 +40,7 @@ class FeatureExtractor:
         return feature_matrix
 
     def extract_means_keypoints(self, img):
-        feature_matrix = self.extract_features(img)
+        feature_matrix = self.extract_matrix_keypoints(img)
         feature_means = np.mean(feature_matrix, axis=0)
         return feature_means
 
