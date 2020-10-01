@@ -2,3 +2,6 @@
 .coverage
 .coverage.*
 .pytest_cache/
+*.pyc
+
+/mars-dataset
