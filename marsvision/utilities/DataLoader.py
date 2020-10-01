@@ -4,7 +4,7 @@ import cv2
 import sys
 import pandas as pd
 import argparse
-from marsvision.pipeline import FeatureExtractor
+from marsvision.pipeline import FeatureExtractor as fe
 
 class DataLoader:
     def __init__(self, 
@@ -56,17 +56,15 @@ class DataLoader:
     def data_transformer(self):
         # Use the feature extractor to produce 
         # a list of feature vectors.
-        detector  = cv2.ORB_create()
-        extractor = FeatureExtractor(detector)
-        self.featureList = [extractor.extract_means(image) for image in self.images]
+        self.feature_vectors = [fe.extract_features(image) for image in self.images]
         
 
     def data_writer(self):
         # Write features to CSV with path names.
         # Use the feature extractor to retrieve features from images.
-        df = pd.DataFrame(data = self.featureList)
+        df = pd.DataFrame(data = self.feature_vectors)
         if self.class_name is not None:
-            df["class"] = class_name
+            df["class"] = self.class_name
         
         out_file = os.path.join(self.out_path, "output.csv")
 
