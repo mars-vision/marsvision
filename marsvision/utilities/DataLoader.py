@@ -101,7 +101,7 @@ class DataLoader:
             df["file_name"] = self.file_names
 
         out_file = os.path.join(self.out_path, "output.csv")
-        df.to_csv(out_file, mode="a")
+        df.to_csv(out_file, mode="a", index=False)
 
     def run(self):
         """
