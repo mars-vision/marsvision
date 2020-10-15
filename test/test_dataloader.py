@@ -25,11 +25,9 @@ class TestDataLoader(TestCase):
         detector  = cv2.ORB_create()
         extractor = FeatureExtractor(detector)
         self.expected_features = [extractor.extract_features(image) for image in self.expected_loaded_images]
-
         self.loader.data_reader()
         self.loader.data_transformer()
-        self.loader.data_writer()
-        
+
     def test_data_reader(self):
         self.assertTrue(np.array_equal(self.expected_loaded_images, self.loader.images))
 
@@ -37,12 +35,17 @@ class TestDataLoader(TestCase):
         self.assertTrue(np.array_equal(self.expected_features, self.expected_features))
 
     def test_data_writer(self):
-        expected_csv_path = os.path.join(self.test_image_path, "output_test.csv")
-        expected_df = pd.read_csv(expected_csv_path)
-        output_csv_path = os.path.join(self.test_image_path, "output.csv")
-        test_df = pd.read_csv(output_csv_path)
-        os.remove(output_csv_path)
-        assert_frame_equal(expected_df, test_df)
-        
-        
+            # Write a test csv file, test against an expected file to ensure a match
+            self.loader.data_writer()
+            expected_csv_path = os.path.join(self.test_image_path, "output_test.csv")
+            expected_df = pd.read_csv(expected_csv_path)
+            output_csv_path = os.path.join(self.test_image_path, "output.csv")
+            test_df = pd.read_csv(output_csv_path)
+            os.remove(output_csv_path)
+            assert_frame_equal(expected_df, test_df)
+            
+
+
+
+    
 

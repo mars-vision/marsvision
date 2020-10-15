@@ -7,11 +7,12 @@ import argparse
 from marsvision.pipeline import FeatureExtractor
 
 class DataLoader:
+    # This might be nicer with keyword arguments
     def __init__(self, 
             in_path: str = None,
             out_path: str = None, 
             class_name: str = None,
-            include_filename: bool = False): 
+            include_filename: bool = True): 
         """
             This class is responsible for loading images from an input directory,
             extracting features from them,
@@ -101,7 +102,7 @@ class DataLoader:
             df["file_name"] = self.file_names
 
         out_file = os.path.join(self.out_path, "output.csv")
-        df.to_csv(out_file, mode="a", index=False)
+        df.to_csv(out_file, mode="a", header=False, index=False)
 
     def run(self):
         """
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument("--i", help="Input directory")
     parser.add_argument("--o", help="Output directory")
     parser.add_argument("--c", help="Class for input files")
-    parser.add_argument("--f", help="Boolean on whether to include the file name or not.")
+    parser.add_argument("--f", help="(Boolean) Whether to include the file name or not.")
     args = parser.parse_args()
     loader = DataLoader(args.i, args.o, args.c, args.f)
     loader.run()
