@@ -5,6 +5,6 @@
 __pycache__/
 *.pyc
 
-# Dataset
+# Data
 mars-dataset/
-
+Prototyping/Notebooks/data
