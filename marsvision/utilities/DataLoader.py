@@ -4,7 +4,7 @@ import cv2
 import sys
 import pandas as pd
 import argparse
-from marsvision.pipeline import FeatureExtractor as fe
+from marsvision.pipeline import FeatureExtractor
 
 class DataLoader:
     # This might be nicer with keyword arguments
