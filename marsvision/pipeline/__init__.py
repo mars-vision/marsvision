@@ -1,1 +1,2 @@
 from .FeatureExtractor import FeatureExtractor
+from .KeypointFeatureExtractor import KeypointFeatureExtractor

@@ -5,7 +5,7 @@ setup(
     name="marsvision",
     description="Mars Vision",
     url="https://github.com/dpalencia/marsvision",
-    author="Daniel Palencia",
+    author="Michael Munje, Mariajose Corral, Iris Rafaela, Daniel Palencia",
     author_email="dpalencia2112@gmail.com",
     license="MIT",
     packages=["marsvision"],

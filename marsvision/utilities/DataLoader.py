@@ -81,8 +81,7 @@ class DataLoader:
         # Use the feature extractor to produce 
         # a list of feature vectors.
         detector  = cv2.ORB_create()
-        extractor = FeatureExtractor(detector)
-        self.feature_list = [extractor.extract_features(image) for image in self.images]
+        self.feature_list = [FeatureExtractor.extract_features(image) for image in self.images]
 
     def data_writer(self):
         """
@@ -124,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument("--i", help="Input directory")
     parser.add_argument("--o", help="Output directory")
     parser.add_argument("--c", help="Class for input files")
-    parser.add_argument("--f", help="(Boolean) Whether to include the file name or not.")
+    parser.add_argument("--f", default=True, nargs="?", help="(Boolean) Whether to include the file name or not.")
     args = parser.parse_args()
     loader = DataLoader(args.i, args.o, args.c, args.f)
     loader.run()

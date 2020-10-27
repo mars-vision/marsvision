@@ -23,8 +23,7 @@ class TestDataLoader(TestCase):
 
         # Calculate expected features which should match with the loader
         detector  = cv2.ORB_create()
-        extractor = FeatureExtractor(detector)
-        self.expected_features = [extractor.extract_features(image) for image in self.expected_loaded_images]
+        self.expected_features = [FeatureExtractor.extract_features(image) for image in self.expected_loaded_images]
         self.loader.data_reader()
         self.loader.data_transformer()
 
