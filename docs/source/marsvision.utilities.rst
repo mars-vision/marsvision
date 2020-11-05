@@ -1,6 +1,14 @@
 marsvision.utilities package
 ============================
 
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   marsvision.utilities.DataLoader
+
 Module contents
 ---------------
 

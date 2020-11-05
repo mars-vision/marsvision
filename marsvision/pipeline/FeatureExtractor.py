@@ -1,49 +1,38 @@
 import numpy as np
 import cv2
-# Constructor:
-# Keypoint detector
 class FeatureExtractor:
-    def __init__(self, detector):
-        self.alg = detector
+    num_features = 6
+    def extract_features(img, 
+        canny_threshold_1: int = 50, 
+        canny_threshold_2: int = 100):
+        """
+        A Feature extractor that takes an image as an input
+        and outputs a vector of features by reducing the dimensionality
+        of the input image to a vector.
 
-    def get_keypoint_points(self, img):
-        keypoints = self.alg.detect(img)
-        points = [(round(keypoint.pt[0]), round(keypoint.pt[1])) for keypoint in keypoints]
-        return points
+        Applies canny and laplacian filters on an input image,
+        takes means and variances of those filters,
+        and means and variances of the image itself.
+        Return the vector of features.
 
-    def select_roi(self, img, point, r):
-        rowStart = max(0, point[0] - r)
-        rowEnd = min(img.shape[0] - 1, point[0] + r)
-        colStart = max(0, point[1] - r)
-        colEnd = min(img.shape[1] - 1, point[1] + r)
-        return img[rowStart : rowEnd, colStart : colEnd]
+        ---
 
-    def extract_features(self, img):
-        # Apply filters to each ROI
-        # Reduce to means and variances (our features)
-        # return a vector of features for each one.
-        points = self.get_keypoint_points(img)
-        r = 20
-
-        # todo: try averaging values for each keypoint instead
-        # in a single vector
-        featureMatrix = np.empty((len(points), 4))
-        for i in range(len(points)):
-            roi = self.select_roi(img, points[i], r)
-            canny = cv2.Canny(roi, 50, 100)
-            lapl = cv2.Laplacian(roi, cv2.CV_64F)
-            vector = [
-                np.mean(canny),
-                np.var(canny),
-                np.mean(lapl),
-                np.var(lapl)
-            ]
-            featureMatrix[i] = vector
-        return featureMatrix
-
-    def extract_means(self, img):
-        featureMatrix = self.extract_features(img)
-        featureMeans = np.mean(featureMatrix, axis=0)
-        return featureMeans
-
+        Parameters:
         
+        img (openCV image): Input image to extractor features
+        canny_threshold_1 (int): OpenCV Canny Threshold 1 for canny detector
+        canny_threshold_2 (int):  OpenCV Canny Theshold 2 for canny detector
+        """
+        img = np.array(img)
+        canny = cv2.Canny(img, canny_threshold_1, canny_threshold_2)
+        lapl = cv2.Laplacian(img, cv2.CV_64F)
+        feature_vector = [
+            np.mean(canny),
+            np.var(canny),
+            np.mean(lapl),
+            np.var(lapl),
+            np.mean(img),
+            np.var(img)
+        ]
+
+        return feature_vector
