@@ -28,5 +28,5 @@ class TestKeypointFeatureExtractor(TestCase):
         # Extract feature means, compare to expected feature means
         detector = cv2.KAZE_create()
         extractor = KeypointFeatureExtractor(detector, self.radius)
-        test_means = np.mean(extractor.extract_keypoint_features(self.img), axis=0)
+        test_means = extractor.get_means_from_keypoints(self.img)
         self.assertTrue(np.array_equal(self.expected_keypoint_features, test_means))

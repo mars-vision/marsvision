@@ -7,14 +7,9 @@ import numpy as np
 class TestFeatureExtractor(TestCase):
     def setUp(self):
         # Expected features for the full marsface.jpg test image
-        self.expected_features = [
-            22.536013333862456, 
-            5238.8115031509, 
-            -0.0013294178340410333, 
-            58.33776957278075, 
-            123.72320330171833, 
-            3634.7277409035864
-        ]
+        self.current_dir = os.path.dirname(__file__)
+        expected_feature_path = os.path.join(self.current_dir, "expected_feature_extractor_features.npy")
+        self.expected_features = np.load(expected_feature_path)
 
         # Load up the matrix of expected features from keypoints
         # for our test image from our marsFeatures.npy file

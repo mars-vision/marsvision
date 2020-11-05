@@ -22,7 +22,7 @@ class KeypointFeatureExtractor:
         keypoints = self.alg.detect(img)
         return [(round(keypoint.pt[0]), round(keypoint.pt[1])) for keypoint in keypoints]
 
-    def select_roi(self, img, point):
+    def select_roi(self, img, point: list):
         """
             Select the ROI (Region of Interest)
             in a radius around a given point.
@@ -55,7 +55,7 @@ class KeypointFeatureExtractor:
             Reduce the feature matrix to a vector
             by taking the mean of each feature.
         """
-        feature_matrix = self.extract_matrix_keypoints(img, 20)
+        feature_matrix = self.extract_keypoint_features(img)
         feature_means = np.mean(feature_matrix, axis=0)
         return feature_means
 

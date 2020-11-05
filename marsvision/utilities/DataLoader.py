@@ -12,7 +12,8 @@ class DataLoader:
             in_path: str = None,
             out_path: str = None, 
             class_name: str = None,
-            include_filename: bool = True): 
+            include_filename: bool = True,
+            detector_name: str = "ORB"): 
         """
             This class is responsible for loading images from an input directory,
             extracting features from them,
@@ -32,6 +33,7 @@ class DataLoader:
             out_path (str): Optional. The output directory to which the csv will be written. Writes to current working directory if left empty.
             class_name (str): Optional. A class name for the input.
             include_filename(bool): Optional. Whether to include the file name. False by default. 
+            detector_name(string): Optional. Name of the detector to use to detect keypoints.
 
         """
         self.class_name = class_name
@@ -47,6 +49,8 @@ class DataLoader:
             self.out_path = out_path
 
         self.include_filename = include_filename
+
+        self.detector_name = detector_name
 
     def data_reader(self):
         """
@@ -64,14 +68,20 @@ class DataLoader:
         # and save all jpg files into a list.
         images = []
         file_names = []
+        folder_names = []
         walk = os.walk(self.in_path, topdown=True)
-        for(root, dirs, files) in walk:
+        for root, dirs, files in walk:
             for file in files:
                 if file.endswith(".jpg"):
-                    images.append(cv2.imread(os.path.join(root, file)))
-                    file_names.append(file)
+                    img =  cv2.imread(os.path.join(root, file))
+                    if img is not None:
+                        images.append(img)
+                        file_names.append(file)
+                        folder_names.append(os.path.basename(root))
+
         self.images = images
         self.file_names = file_names
+        self.folder_names = folder_names
 
     def data_transformer(self):
         """
@@ -97,11 +107,14 @@ class DataLoader:
         
         if self.class_name is not None:
             df["class"] = self.class_name
+        else:
+            df["class"] = self.folder_names
+
         if self.include_filename:
             df["file_name"] = self.file_names
 
         out_file = os.path.join(self.out_path, "output.csv")
-        df.to_csv(out_file, mode="a", header=False, index=False)
+        df.to_csv(out_file, header=False, index=False)
 
     def run(self):
         """
