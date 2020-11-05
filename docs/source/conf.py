@@ -16,13 +16,13 @@ import pytorch_sphinx_theme
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../..'))
-
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
 project = 'marsvision'
-copyright = '2020, Daniel Palencia'
-author = 'Daniel Palencia'
+copyright = '2020'
+author = 'Michael Munje, Mariajose Corral, Iris Rafaela, Daniel Palencia'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'
@@ -45,7 +45,8 @@ numpydoc_class_members_toctree = False
 
 autodoc_default_options = {
     'members': True,
-    'inherited-members': True
+    'inherited-members': True,
+    'special-members': '__init__'
 }
 
 # generate autosummary even if no references

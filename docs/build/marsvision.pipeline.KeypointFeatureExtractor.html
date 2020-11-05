@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Search &mdash; marsvision 0.1.0 documentation</title>
+  <title>marsvision.pipeline.KeypointFeatureExtractor module &mdash; marsvision 0.1.0 documentation</title>
   
 
   
@@ -27,7 +27,9 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-    <link rel="search" title="Search" href="#" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="marsvision.utilities package" href="marsvision.utilities.html" />
+    <link rel="prev" title="marsvision.pipeline.FeatureExtractor module" href="marsvision.pipeline.FeatureExtractor.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -111,7 +113,7 @@
 
 
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -127,8 +129,8 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a></li>
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a></li>
 </ul>
@@ -173,12 +175,16 @@
       </li>
 
         
-      <li>Search</li>
+          <li><a href="marsvision.pipeline.html">marsvision.pipeline package</a> &gt;</li>
+        
+      <li>marsvision.pipeline.KeypointFeatureExtractor module</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
+            <a href="_sources/marsvision.pipeline.KeypointFeatureExtractor.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
         
       </li>
     
@@ -200,19 +206,62 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" class="pytorch-article">
               
-  <noscript>
-  <div id="fallback" class="admonition warning">
-    <p class="last">
-      Please activate JavaScript to enable the search
-      functionality.
-    </p>
-  </div>
-  </noscript>
+  <div class="section" id="module-marsvision.pipeline.KeypointFeatureExtractor">
+<span id="marsvision-pipeline-keypointfeatureextractor-module"></span><h1>marsvision.pipeline.KeypointFeatureExtractor module<a class="headerlink" href="#module-marsvision.pipeline.KeypointFeatureExtractor" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor">
+<em class="property">class </em><code class="sig-prename descclassname">marsvision.pipeline.KeypointFeatureExtractor.</code><code class="sig-name descname">KeypointFeatureExtractor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">detector</span></em>, <em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">20</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">detector</span></em>, <em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">20</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class uses an OpenCV detector to detect keypoints on image and
+returns reduces the area around the keypoints to a vector of numerical features.</p>
+<p>These features are means and variances of the region,
+and means and variances of the region after applying Canny and Laplacian filters.</p>
+<p>This class is ideally used by invoking either extract_keypoint_features to get a matrix of features,
+or get_means_from keypoints to get a matrix of features from an image.</p>
+<p>Parameters:</p>
+<p>Detector: OpenCV Feature Detector
+Radius(Int): Pixel radius to extract features from.</p>
+</dd></dl>
 
-  
-  <div id="search-results">
-  
-  </div>
+<dl class="py method">
+<dt id="marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.extract_keypoint_features">
+<code class="sig-name descname">extract_keypoint_features</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.extract_keypoint_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a matrix of features from 
+the feature vectors of each keypoint.</p>
+<p>img (numpy.ndarray): image to extract features from, represented as a numpy.ndarray</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.get_keypoint_points">
+<code class="sig-name descname">get_keypoint_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.get_keypoint_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use an OpenCV algorithm to detect keypoints.</p>
+<p>img (numpy.ndarray): image to extract features from, represented as a numpy.ndarray.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.get_means_from_keypoints">
+<code class="sig-name descname">get_means_from_keypoints</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.get_means_from_keypoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduce the feature matrix to a vector
+by taking the mean of each feature.</p>
+<p>img (numpy.ndarray): image to get a feature vector from, represented as a numpy.ndarray</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.select_roi">
+<code class="sig-name descname">select_roi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em>, <em class="sig-param"><span class="n">point</span><span class="p">:</span> <span class="n">list</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.KeypointFeatureExtractor.KeypointFeatureExtractor.select_roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the ROI (Region of Interest)
+in a radius around a given point.</p>
+<p>img (numpy.ndarray): image to select ROI from, represented as a numpy.ndarray
+point (list): A 2 element list with x and y coordinates for the point.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
 
              </article>
              
@@ -238,7 +287,10 @@
         <div class="pytorch-content-right" id="pytorch-content-right">
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
-              
+              <ul>
+<li><a class="reference internal" href="#">marsvision.pipeline.KeypointFeatureExtractor module</a></li>
+</ul>
+
             </div>
           </div>
         </div>
@@ -265,7 +317,6 @@
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
       <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="_static/searchtools.js"></script>
 
   
 
@@ -277,14 +328,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script type="text/javascript" id="searchindexloader"></script>
-   
-
+  </script> 
 
   <!-- Begin Footer -->
 

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Search &mdash; marsvision 0.1.0 documentation</title>
+  <title>marsvision.utilities.DataLoader module &mdash; marsvision 0.1.0 documentation</title>
   
 
   
@@ -27,7 +27,9 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-    <link rel="search" title="Search" href="#" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="marsvision.vision package" href="marsvision.vision.html" />
+    <link rel="prev" title="marsvision.utilities package" href="marsvision.utilities.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -111,7 +113,7 @@
 
 
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -127,9 +129,9 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a></li>
 </ul>
 
@@ -173,12 +175,16 @@
       </li>
 
         
-      <li>Search</li>
+          <li><a href="marsvision.utilities.html">marsvision.utilities package</a> &gt;</li>
+        
+      <li>marsvision.utilities.DataLoader module</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
+            <a href="_sources/marsvision.utilities.DataLoader.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
         
       </li>
     
@@ -200,19 +206,75 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" class="pytorch-article">
               
-  <noscript>
-  <div id="fallback" class="admonition warning">
-    <p class="last">
-      Please activate JavaScript to enable the search
-      functionality.
-    </p>
-  </div>
-  </noscript>
+  <div class="section" id="module-marsvision.utilities.DataLoader">
+<span id="marsvision-utilities-dataloader-module"></span><h1>marsvision.utilities.DataLoader module<a class="headerlink" href="#module-marsvision.utilities.DataLoader" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="marsvision.utilities.DataLoader.DataLoader">
+<em class="property">class </em><code class="sig-prename descclassname">marsvision.utilities.DataLoader.</code><code class="sig-name descname">DataLoader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">class_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_filename</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">detector_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'ORB'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="marsvision.utilities.DataLoader.DataLoader.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">class_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_filename</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">detector_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'ORB'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is responsible for loading images from an input directory,
+extracting features from them, and outputting the processed data as a .csv file.</p>
+<p>A class parameter can be used to classify all images within the input folder.</p>
+<p>It can be invoked directly via the command line.</p>
+<p>—</p>
+<p>Parameters:</p>
+<p>in_path (str): Optional. The input directory which contains images to be read. Reads from the current working directory if left empty.</p>
+<p>out_path (str): Optional. The output directory to which the csv will be written. Writes to current working directory if left empty.</p>
+<p>class_name (str): Optional. A class name for the input.</p>
+<p>include_filename(bool): Optional. Whether to include the file name. False by default.</p>
+<p>detector_name(string): Optional. Name of the detector to use to detect keypoints.</p>
+<p>—</p>
+<p>Command Line Arguments:</p>
+<p>–i: Input directory. Default: current working directory</p>
+<p>–o: Output directory. Default: output to current working directory.</p>
+<p>–c: Class for input files. Default: use containing folder as class name.</p>
+<p>–f: Boolean, whether to include the file name or not. Default: True</p>
+</dd></dl>
 
-  
-  <div id="search-results">
-  
-  </div>
+<dl class="py method">
+<dt id="marsvision.utilities.DataLoader.DataLoader.data_reader">
+<code class="sig-name descname">data_reader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.data_reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Walk through a folder and load images, file names, and folder names into memory
+as member variables.</p>
+<p>All .jpg images in the working directory,
+and all subdirectories are loaded.</p>
+<p>This function updates the self.images, self.file_names, and self.folder_names members with the loaded data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.utilities.DataLoader.DataLoader.data_transformer">
+<code class="sig-name descname">data_transformer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.data_transformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the FeatureExtractor module to load
+a vector of features into memory as a member variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.utilities.DataLoader.DataLoader.data_writer">
+<code class="sig-name descname">data_writer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.data_writer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Pandas dataframe from the extracted features, and write the data to a .csv file (“output.csv”),
+to the path which was specified in the constructor.</p>
+<p>Set columns depending on user preferences:
+If a class is defined, write to the class to a class column.
+If no class is defines, the containing folder name will be used as the class in the class column.
+If file names are desired, file names are written to a file_name column.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.utilities.DataLoader.DataLoader.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>When called, run() will execute the data_reader(), data_transformer(), and data_writer() 
+functions in order.</p>
+<p>The result will be an output .csv file either in the directory from which the script is run,
+or in the user specified directory.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
 
              </article>
              
@@ -238,7 +300,10 @@
         <div class="pytorch-content-right" id="pytorch-content-right">
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
-              
+              <ul>
+<li><a class="reference internal" href="#">marsvision.utilities.DataLoader module</a></li>
+</ul>
+
             </div>
           </div>
         </div>
@@ -265,7 +330,6 @@
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
       <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="_static/searchtools.js"></script>
 
   
 
@@ -277,14 +341,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script type="text/javascript" id="searchindexloader"></script>
-   
-
+  </script> 
 
   <!-- Begin Footer -->
 

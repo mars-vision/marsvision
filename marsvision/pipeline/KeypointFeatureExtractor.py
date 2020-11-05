@@ -3,7 +3,8 @@ import cv2
 from marsvision.pipeline import FeatureExtractor
 
 class KeypointFeatureExtractor:
-    def __init__(self, detector,
+    def __init__(self, 
+            detector,
             radius: int = 20):
         """
             This class uses an OpenCV detector to detect keypoints on image and
@@ -11,6 +12,18 @@ class KeypointFeatureExtractor:
             
             These features are means and variances of the region,
             and means and variances of the region after applying Canny and Laplacian filters.
+            
+            This class is ideally used by invoking either extract_keypoint_features to get a matrix of features,
+            or get_means_from keypoints to get a matrix of features from an image.
+
+            
+
+            ----------
+            Parameters:
+            
+            Detector: OpenCV Feature Detector
+            Radius(Int): Pixel radius to extract features from.
+
         """
         self.alg = detector
         self.radius = radius
@@ -18,6 +31,11 @@ class KeypointFeatureExtractor:
     def get_keypoint_points(self, img):
         """
             Use an OpenCV algorithm to detect keypoints.
+
+            Parameters
+            ----------
+            img (numpy.ndarray): image to extract features from, represented as a numpy.ndarray.
+
         """
         keypoints = self.alg.detect(img)
         return [(round(keypoint.pt[0]), round(keypoint.pt[1])) for keypoint in keypoints]
@@ -26,6 +44,11 @@ class KeypointFeatureExtractor:
         """
             Select the ROI (Region of Interest)
             in a radius around a given point.
+
+            Parameters
+            ----------
+            img (numpy.ndarray): image to select ROI from, represented as a numpy.ndarray
+            point (list): A 2 element list with x and y coordinates for the point.
         """
         row_start = max(0, point[0] - self.radius)
         row_end = min(img.shape[0] - 1, point[0] + self.radius)
@@ -37,6 +60,11 @@ class KeypointFeatureExtractor:
         """
             Build a matrix of features from 
             the feature vectors of each keypoint.
+
+            Parameters
+            ----------
+            img (numpy.ndarray): image to extract features from, represented as a numpy.ndarray
+
         """
         # Apply filters to each ROI
         # Reduce to means and variances
@@ -54,6 +82,11 @@ class KeypointFeatureExtractor:
         """
             Reduce the feature matrix to a vector
             by taking the mean of each feature.
+
+            Parameters
+            ----------
+            img (numpy.ndarray): image to get a feature vector from, represented as a numpy.ndarray
+
         """
         feature_matrix = self.extract_keypoint_features(img)
         feature_means = np.mean(feature_matrix, axis=0)

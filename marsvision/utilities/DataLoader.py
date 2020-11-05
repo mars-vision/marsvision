@@ -16,28 +16,45 @@ class DataLoader:
             detector_name: str = "ORB"): 
         """
             This class is responsible for loading images from an input directory,
-            extracting features from them,
-            and outputting the processed data as a .csv file. 
+            extracting features from them, and outputting the processed data as a .csv file. 
             
             A class parameter can be used to classify all images within the input folder.
 
-            The csv file will be appended if one already exists, so this script can be invoked on 
-            multiple folders to produce an output file with many classes.
+            It can be invoked directly via the command line.
 
-            It can be invoked directly via its main function
-            with command line arguments.
+            ---
+            
+            Parameters:
 
-            Parameters
-            ----------
             in_path (str): Optional. The input directory which contains images to be read. Reads from the current working directory if left empty.
+
             out_path (str): Optional. The output directory to which the csv will be written. Writes to current working directory if left empty.
+
             class_name (str): Optional. A class name for the input.
+
             include_filename(bool): Optional. Whether to include the file name. False by default. 
+
             detector_name(string): Optional. Name of the detector to use to detect keypoints.
+
+            ---
+
+            Command Line Arguments:
+
+            --i: Input directory. Default: current working directory
+
+            --o: Output directory. Default: output to current working directory.
+
+            --c: Class for input files. Default: use containing folder as class name.
+
+            --f: Boolean, whether to include the file name or not. Default: True
+
+            
+            
 
         """
         self.class_name = class_name
 
+        # Set values based on whether default parameters are set
         if in_path == None:
             self.in_path = os.getcwd()
         else: 
@@ -54,13 +71,13 @@ class DataLoader:
 
     def data_reader(self):
         """
-            Load images and file names as members.
+            Walk through a folder and load images, file names, and folder names into memory
+            as member variables.
             
             All .jpg images in the working directory,
             and all subdirectories are loaded.
 
-            This function updates the self.images,
-            and self.file_names members with the loaded data.
+            This function updates the self.images, self.file_names, and self.folder_names members with the loaded data.
 
         """
 
@@ -86,7 +103,7 @@ class DataLoader:
     def data_transformer(self):
         """
             Use the FeatureExtractor module to load
-            a vector of features into memory as a member variable, as defined in that class.
+            a vector of features into memory as a member variable.
         """
         # Use the feature extractor to produce 
         # a list of feature vectors.
@@ -95,10 +112,12 @@ class DataLoader:
 
     def data_writer(self):
         """
-            Creates a Pandas dataframe from the extracted features,
-            adds extra columns depending on user preferences:
+            Creates a Pandas dataframe from the extracted features, and write the data to a .csv file ("output.csv"),
+            to the path which was specified in the constructor.
             
+            Set columns depending on user preferences:
             If a class is defined, write to the class to a class column.
+            If no class is defines, the containing folder name will be used as the class in the class column.
             If file names are desired, file names are written to a file_name column.
         """
         # Write features to CSV with path names.
