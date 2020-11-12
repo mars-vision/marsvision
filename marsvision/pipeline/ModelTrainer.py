@@ -1,31 +1,34 @@
 import numpy as np
 import sklearn
+import os
+import torch
 import torch.optim as optim
-import torch.save as save
 import pickle
 
-class Model:
-    Model.PYTORCH = "pytorch"
-    Model.SKLEARN = "sklearn"
+class ModelTrainer:
+    PYTORCH = "pytorch"
+    SKLEARN = "sklearn"
 
     def __init__(self, 
-        model_type: str = MODEL.PYTORCH,
-        model,
         training_data,
         training_labels,
-        num_epochs: int = 2)
+        model,
+        model_type: str = PYTORCH,
+        num_epochs: int = 2):
         self.model_type = model_type
         self.model = model
+        self.training_data = training_data
+        self.training_labels = training_labels
 
-    def train_model():
-        if model_type == MODEL.PYTORCH:
+    def train_model(self):
+        if self.model_type == ModelTrainer.PYTORCH:
             train_pytorch()
 
-        if model_type == MODEL.SKLEARN
-            model.fit()
+        if self.model_type == ModelTrainer.SKLEARN:
+            self.model.fit(self.training_data, self.training_labels)
         
 
-    def train_pytorch():
+    def train_pytorch(self):
         # Train a pytorch model given 
         # training data and class labels
         for repeat in range(num_epochs):
@@ -36,18 +39,20 @@ class Model:
                 loss.backward()
                 optimizer.step()
 
-    def save_model(out_filename: str = "output.p"):
-        if model_type == MODEL.SKLEARN:
-            with open(out_filename) as out_file:
+    def save_model(self, out_path: str):
+        if self.model_type == ModelTrainer.SKLEARN:
+            with open(out_path, "wb") as out_file:
                 pickle.dump(self.model, out_file)
                 
-        if model_type == MODEL.PYTORCH:
-            save(model, out_filename)
+        if self.model_type == ModelTrainer.PYTORCH:
+            torch.save(model, out_filename)
 
 
-    def load_model();
+    def load_model(self, input_path):
+        with open(input_path, 'rb') as in_file:
+            self.model = pickle.load(in_file)
         #load model from file
 
-    
 
-    
+
+

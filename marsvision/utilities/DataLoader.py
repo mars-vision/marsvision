@@ -5,14 +5,13 @@ import sys
 import pandas as pd
 import argparse
 from marsvision.pipeline import FeatureExtractor
+from sklearn.preprocessing import LabelEncoder
 
 class DataLoader:
     # This might be nicer with keyword arguments
     def __init__(self, 
             in_path: str = None,
             out_path: str = None, 
-            class_name: str = None,
-            include_filename: bool = True,
             detector_name: str = "ORB"): 
         """
             This class is responsible for loading images from an input directory,
@@ -30,10 +29,6 @@ class DataLoader:
 
             out_path (str): Optional. The output directory to which the csv will be written. Writes to current working directory if left empty.
 
-            class_name (str): Optional. A class name for the input.
-
-            include_filename(bool): Optional. Whether to include the file name. False by default. 
-
             detector_name(string): Optional. Name of the detector to use to detect keypoints.
 
             ---
@@ -48,12 +43,7 @@ class DataLoader:
 
             --f: Boolean, whether to include the file name or not. Default: True
 
-            
-            
-
         """
-        self.class_name = class_name
-
         # Set values based on whether default parameters are set
         if in_path == None:
             self.in_path = os.getcwd()
@@ -64,8 +54,6 @@ class DataLoader:
             self.out_path = os.getcwd()
         else: 
             self.out_path = out_path
-
-        self.include_filename = include_filename
 
         self.detector_name = detector_name
 
@@ -104,36 +92,39 @@ class DataLoader:
         """
             Use the FeatureExtractor module to load
             a vector of features into memory as a member variable.
-        """
-        # Use the feature extractor to produce 
-        # a list of feature vectors.
-        detector  = cv2.ORB_create()
-        self.feature_list = [FeatureExtractor.extract_features(image) for image in self.images]
 
-    def data_writer(self):
-        """
             Creates a Pandas dataframe from the extracted features, and write the data to a .csv file ("output.csv"),
             to the path which was specified in the constructor.
-            
+
             Set columns depending on user preferences:
             If a class is defined, write to the class to a class column.
             If no class is defines, the containing folder name will be used as the class in the class column.
             If file names are desired, file names are written to a file_name column.
+
+        """
+        # Use the feature extractor to produce 
+        # a list of feature vectors.
+
+        if(self.detector_name == "ORB"):
+            detector  = cv2.ORB_create()
+
+        self.feature_list = [FeatureExtractor.extract_features(image) for image in self.images]
+        self.df = pd.DataFrame(data = self.feature_list)
+        self.df["class"] = self.folder_names
+        self.df["file_name"] = self.file_names
+        LE = LabelEncoder()
+        self.df["class_code"] = LE.fit_transform(self.df["class"])
+
+
+    def data_writer(self):
+        """
+            Write the constructed dataframe to an output file ("output.csv")
+
         """
         # Write features to CSV with path names.
         # Use the feature extractor to retrieve features from images.
-        df = pd.DataFrame(data = self.feature_list)
-        
-        if self.class_name is not None:
-            df["class"] = self.class_name
-        else:
-            df["class"] = self.folder_names
-
-        if self.include_filename:
-            df["file_name"] = self.file_names
-
         out_file = os.path.join(self.out_path, "output.csv")
-        df.to_csv(out_file, header=False, index=False)
+        self.df.to_csv(out_file, index=False)
 
     def run(self):
         """

@@ -14,25 +14,23 @@ class TestDataLoader(TestCase):
         self.test_image_path = os.path.join(self.current_dir, "test_images_loader")
         
         # For testing data loader with provided paths
-        self.loader = DataLoader(self.test_image_path, self.test_image_path, "class", True)
+        self.loader = DataLoader(self.test_image_path, self.test_image_path, "class")
         
-        # And without arguments
-        self.loader_with_folder_names = DataLoader(self.test_image_path, self.test_image_path)
-
         # Manually load a list of images and to test against the loader
-        self.expected_loaded_images = [
-           cv2.imread(os.path.join(self.test_image_path, "ESP_011492_1260_RED.NOMAP.browse-Block-2.jpg")),
-           cv2.imread(os.path.join(self.test_image_path, "ESP_026455_2460_RED.NOMAP.browse-Block-1.jpg")),
-           cv2.imread(os.path.join(self.test_image_path, "ESP_056891_0940_RED.NOMAP.browse-Block-9.jpg")),
-        ] 
+        self.expected_loaded_images = []
+        walk = os.walk(self.test_image_path, topdown=True)
+        for root, dirs, files in walk:
+            for file in files:
+                if file.endswith(".jpg"):
+                    img =  cv2.imread(os.path.join(root, file))
+                    if img is not None:
+                        self.expected_loaded_images.append(img)
 
         # Calculate expected features which should match with the loader
         detector  = cv2.ORB_create()
         self.expected_features = [FeatureExtractor.extract_features(image) for image in self.expected_loaded_images]
         self.loader.data_reader()
         self.loader.data_transformer()
-        self.loader_with_folder_names.data_reader()
-        self.loader_with_folder_names.data_transformer()
 
     def test_data_reader(self):
         self.assertTrue(np.array_equal(self.expected_loaded_images, self.loader.images))
@@ -49,16 +47,6 @@ class TestDataLoader(TestCase):
             test_df = pd.read_csv(output_csv_path)
             os.remove(output_csv_path)
             assert_frame_equal(expected_df, test_df)
-
-            self.loader_with_folder_names.run()
-            expected_csv_path = os.path.join(self.test_image_path, "output_with_folders.csv")
-            expected_df = pd.read_csv(expected_csv_path)
-            output_csv_path = os.path.join(self.test_image_path, "output.csv")
-            test_df = pd.read_csv(output_csv_path)
-            os.remove(output_csv_path) 
-            assert_frame_equal(expected_df, test_df)
-            
-
 
 
     
