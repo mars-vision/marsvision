@@ -1,4 +1,5 @@
 from sklearn.linear_model import LogisticRegression as LR
+from marsvision.pipeline.ConvNet import ConvNet
 import pickle
 from marsvision.pipeline.ModelTrainer import ModelTrainer
 from marsvision.utilities import DataLoader
@@ -18,30 +19,40 @@ class TestModelTrainer(TestCase):
 
         dataloader = DataLoader(test_image_path, test_image_path)
         dataloader.data_reader()
-        dataloader.data_transformer()
+        self.training_images = dataloader.images
+        self.labels =  dataloader.labels
+    
+    
+    def test_save_load_pytorch(self):
+        pytorch_nn = ConvNet()
+        trainer_pytorch = ModelTrainer(self.training_images, self.labels, pytorch_nn, "pytorch")
+        trainer_pytorch.train_model()
 
-        data = dataloader.df
-        training_data = data.iloc[:,0:5]
-        labels = data["class_code"]
+        nn_before = trainer_pytorch.model
+        trainer_pytorch.save_model("test_pytorch_model.p")
+        trainer_sklearn.load_model("test_pytorch_model.p")
+        nn_after = trainer_pytorch.model
 
-        print(training_data)
-        sklearn_logistic_regression = LR()
-
-        self.trainer_sklearn = ModelTrainer(training_data, labels, sklearn_logistic_regression, "sklearn")
-        self.trainer_sklearn.train_model()
-
-
-    def test_save_load(self):
-        # Save and load the model, assert equal on its attributes
+        for p1, p2 in zip(nn_before.parameters(), nn_after.parameters()):
+            if p1.data.ne(p2.data).sum > 0:
+                return False
+        return True
         
-        lr_before = self.trainer_sklearn.model
-        self.trainer_sklearn.save_model("test_lr_model.p")
 
-        self.trainer_sklearn.load_model("test_lr_model.p")
-        lr_after = self.trainer_sklearn.model
+    def test_save_load_lr(self):
+        # Save and load the model, assert equal on its attributes
+        sklearn_logistic_regression = LR()
+        trainer_sklearn = ModelTrainer(self.training_images, self.labels, sklearn_logistic_regression, "sklearn")
+        trainer_sklearn.train_model()
+
+        lr_before = trainer_sklearn.model
+        trainer_sklearn.save_model("test_lr_model.p")
+
+        trainer_sklearn.load_model("test_lr_model.p")
+        lr_after = trainer_sklearn.model
 
         os.remove("test_lr_model.p")
-        test_lr_model = self.trainer_sklearn.model
+        test_lr_model = trainer_sklearn.model
 
         np.testing.assert_equal(lr_before.classes_, lr_after.classes_)
         np.testing.assert_equal(lr_before.coef_, lr_after.coef_)

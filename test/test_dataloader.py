@@ -14,7 +14,7 @@ class TestDataLoader(TestCase):
         self.test_image_path = os.path.join(self.current_dir, "test_images_loader")
         
         # For testing data loader with provided paths
-        self.loader = DataLoader(self.test_image_path, self.test_image_path, "class")
+        self.loader = DataLoader(self.test_image_path, self.test_image_path)
         
         # Manually load a list of images and to test against the loader
         self.expected_loaded_images = []

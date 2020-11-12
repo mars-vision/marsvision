@@ -11,8 +11,7 @@ class DataLoader:
     # This might be nicer with keyword arguments
     def __init__(self, 
             in_path: str = None,
-            out_path: str = None, 
-            detector_name: str = "ORB"): 
+            out_path: str = None): 
         """
             This class is responsible for loading images from an input directory,
             extracting features from them, and outputting the processed data as a .csv file. 
@@ -55,8 +54,6 @@ class DataLoader:
         else: 
             self.out_path = out_path
 
-        self.detector_name = detector_name
-
     def data_reader(self):
         """
             Walk through a folder and load images, file names, and folder names into memory
@@ -65,7 +62,7 @@ class DataLoader:
             All .jpg images in the working directory,
             and all subdirectories are loaded.
 
-            This function updates the self.images, self.file_names, and self.folder_names members with the loaded data.
+            This function updates the self.images, self.file_names, and self.labels members with the loaded data.
 
         """
 
@@ -73,7 +70,7 @@ class DataLoader:
         # and save all jpg files into a list.
         images = []
         file_names = []
-        folder_names = []
+        labels = []
         walk = os.walk(self.in_path, topdown=True)
         for root, dirs, files in walk:
             for file in files:
@@ -82,11 +79,12 @@ class DataLoader:
                     if img is not None:
                         images.append(img)
                         file_names.append(file)
-                        folder_names.append(os.path.basename(root))
+                        labels.append(os.path.basename(root))
 
         self.images = images
         self.file_names = file_names
-        self.folder_names = folder_names
+        self.labels = labels
+
 
     def data_transformer(self):
         """
@@ -105,12 +103,9 @@ class DataLoader:
         # Use the feature extractor to produce 
         # a list of feature vectors.
 
-        if(self.detector_name == "ORB"):
-            detector  = cv2.ORB_create()
-
         self.feature_list = [FeatureExtractor.extract_features(image) for image in self.images]
         self.df = pd.DataFrame(data = self.feature_list)
-        self.df["class"] = self.folder_names
+        self.df["class"] = self.labels
         self.df["file_name"] = self.file_names
         LE = LabelEncoder()
         self.df["class_code"] = LE.fit_transform(self.df["class"])

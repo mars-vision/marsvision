@@ -17,12 +17,10 @@ dataloader = DataLoader(test_image_path, test_image_path)
 dataloader.run()
 
 # Create file for sklearn logistic regression model
-loaded_dataframe = dataloader.df
-model_train_data = np.array(loaded_dataframe.iloc[:,0:5])
+model_train_images = dataloader.images
 model_train_data_labels = loaded_dataframe["class_code"]
-
 lr_model = LR()
-lr_model.fit(model_train_data, loaded_dataframe["class_code"])
+lr_model.fit(model_train_images, model_train_data_labels)
 
 with open("test_lr_model.p", "wb") as out_file:
     pickle.dump(lr_model, out_file)
