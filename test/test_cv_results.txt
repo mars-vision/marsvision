@@ -1,0 +1,8 @@
+accuracy(all folds): [0.75       0.66666667]
+accuracy(mean): 0.7083333333333333
+precision(all folds): [1.  0.5]
+precision(mean): 0.75
+recall(all folds): [0.5 1. ]
+recall(mean): 0.75
+roc_auc(all folds): [0.5 1. ]
+roc_auc(mean): 0.75
