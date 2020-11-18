@@ -8,7 +8,6 @@ from marsvision.pipeline import FeatureExtractor
 from sklearn.preprocessing import LabelEncoder
 
 class DataLoader:
-    # This might be nicer with keyword arguments
     def __init__(self, 
             in_path: str = None,
             out_path: str = None): 
