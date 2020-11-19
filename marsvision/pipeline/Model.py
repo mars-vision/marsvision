@@ -103,7 +103,7 @@ class Model:
         else:
             raise Exception("No model type specified in marsvision.pipeline.Model")
 
-    def write_cv_results(self, output_path: str = os.getcwd() + "cv_test_results.txt"):
+    def write_cv_results(self, output_path: str = "cv_test_results.txt"):
         """
             Save cross validation results to a file. Shows results for individual folds, and the mean result for all folds,
             for all user specified classification metrics.
@@ -147,7 +147,7 @@ class Model:
         else:
             raise Exception("No model specified in marsvision.pipeline.Model")
 
-    def save_model(self, out_path: str = os.getcwd() + "model.p"):
+    def save_model(self, out_path: str: "model.p"):
         """
             Saves a pickle file containing this object's model.
 
