@@ -21,7 +21,6 @@ class Model:
             Model class that serves as an abstract wrapper for either an sklearn or pytorch model.
 
             Contains methods for making predictions, and for cross validating the model and writing results to a file.
-
             --------
             
             Parameters:
@@ -54,11 +53,9 @@ class Model:
         if self.model_type == Model.SKLEARN:
             image_features = np.array(FeatureExtractor.extract_features(image))
             return self.model.predict(image_features.reshape(1, -1))
-        elif self.model_type == Model.PYTORCH:
+        elif self.model_type == Model.PYTORCH: # pragma: no cover
             # TODO: Implement pytorch for model class
-            pass
-        else:
-            raise Exception("No model specified in marsvision.pipeline.Model")
+            Exception("Invalid model specified in marsvision.pipeline.Model")
 
 
     def set_extracted_features(self):
@@ -97,11 +94,10 @@ class Model:
             if self.extracted_features is None:
                 self.set_extracted_features()
             self.cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
-        elif self.model_type == Model.PYTORCH:
+        elif self.model_type == Model.PYTORCH: # pragma: no cover
             # TODO: Implement pytorch cross validation
-            pass
-        else:
-            raise Exception("No model type specified in marsvision.pipeline.Model")
+            raise  Exception("Invalid model specified in marsvision.pipeline.Model")
+
 
     def write_cv_results(self, output_path: str = "cv_test_results.txt"):
         """
@@ -113,9 +109,6 @@ class Model:
             output_path (str): Path and file to write the results to.
 
         """
-        if self.cv_results is None:
-            raise Exception("No cross validation results to write. Call Model.cross_validate first.")
-
         output_file = open(output_path, "w")
         for score in self.scoring:
             cv_score_mean = np.mean(self.cv_results["test_" + score])
@@ -123,7 +116,7 @@ class Model:
             output_file.write(score + "(mean): " + str(cv_score_mean) + "\n")
 
         
-    def train_model(self):
+    def train_model(self): # pragma: no cover
         """
             Trains a classifier using this object's configuration, as specified in the construct. 
             
@@ -135,10 +128,9 @@ class Model:
         """
 
         # Todo: Implement pytorch training
-        #if self.model_type == Model.PYTORCH:
-            #self.train_pytorch()
-
-        if self.model_type == Model.SKLEARN:
+        if self.model_type == Model.PYTORCH:
+            raise Exception("Invalid model specified in marsvision.pipeline.Model")
+        elif self.model_type == Model.SKLEARN:
             # Extract features from every image in the batch,
             # then fit the sklearn model to these features.
             if self.extracted_features is None:
@@ -161,7 +153,7 @@ class Model:
             with open(out_path, "wb") as out_file:
                 pickle.dump(self.model, out_file)
                 
-        if self.model_type == Model.PYTORCH:
+        if self.model_type == Model.PYTORCH: # pragma: no cover
             torch.save(model, out_filename)
 
 

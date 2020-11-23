@@ -135,7 +135,7 @@ class DataLoader:
 
 # Read/write image data with features
 # If we run this module directly.
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     parser = argparse.ArgumentParser(description="Process input strings")
     parser.add_argument("--i", help="Input directory")
     parser.add_argument("--o", help="Output directory")
