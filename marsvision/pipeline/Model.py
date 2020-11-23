@@ -147,7 +147,7 @@ class Model:
         else:
             raise Exception("No model specified in marsvision.pipeline.Model")
 
-    def save_model(self, out_path: str: "model.p"):
+    def save_model(self, out_path: str = "model.p"):
         """
             Saves a pickle file containing this object's model.
 
