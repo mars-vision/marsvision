@@ -16,6 +16,7 @@ install:
 script:
   - source activate marsvision
   - python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning
+  - mypy -p marsvision
   - cd docs
   - make html
   - cd ..
