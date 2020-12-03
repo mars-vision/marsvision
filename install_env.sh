@@ -13,3 +13,4 @@ pip install matplotlib
 pip install opencv-python
 pip install scikit-learn
 pip install mypy
+pip install exif

@@ -11,6 +11,7 @@ Submodules
    marsvision.pipeline.FeatureExtractor
    marsvision.pipeline.KeypointFeatureExtractor
    marsvision.pipeline.Model
+   marsvision.pipeline.SlidingWindow
 
 Module contents
 ---------------
