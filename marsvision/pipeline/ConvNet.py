@@ -8,7 +8,7 @@ import torchvision
 import torchvision.transforms as transforms
 
 
-class ConvNet(nn.Module):
+class ConvNet(nn.Module): # pragma: no cover
     def __init__(self):
         super(ConvNet, self).__init__()
         # Basic CNN:

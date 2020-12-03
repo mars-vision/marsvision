@@ -24,6 +24,8 @@ class TestModel(TestCase):
         self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", training_images = self.training_images, training_labels = self.labels)
         self.model_sklearn.train_model()
 
+
+
     def test_save_load_inference(self):
         # Make a prediction on an image, 
         # save the model,

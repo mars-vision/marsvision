@@ -6,11 +6,12 @@ import pandas as pd
 import argparse
 from marsvision.pipeline import FeatureExtractor
 from sklearn.preprocessing import LabelEncoder
+from typing import Optional
 
 class DataLoader:
     def __init__(self, 
-            in_path: str = None,
-            out_path: str = None): 
+            in_path: Optional[str] = None,
+            out_path: Optional[str] = None): 
         """
             This class is responsible for loading images from an input directory,
             extracting features from them, and outputting the processed data as a .csv file. 
@@ -43,12 +44,12 @@ class DataLoader:
 
         """
         # Set values based on whether default parameters are set
-        if in_path == None:
+        if not in_path:
             self.in_path = os.getcwd()
         else: 
             self.in_path = in_path
 
-        if out_path == None:
+        if not out_path:
             self.out_path = os.getcwd()
         else: 
             self.out_path = out_path
@@ -135,14 +136,12 @@ class DataLoader:
 
 # Read/write image data with features
 # If we run this module directly.
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     parser = argparse.ArgumentParser(description="Process input strings")
     parser.add_argument("--i", help="Input directory")
     parser.add_argument("--o", help="Output directory")
-    parser.add_argument("--c", help="Class for input files")
-    parser.add_argument("--f", default=True, nargs="?", help="(Boolean) Whether to include the file name or not.")
     args = parser.parse_args()
-    loader = DataLoader(args.i, args.o, args.c, args.f)
+    loader = DataLoader(args.i, args.o)
     loader.run()
 
 

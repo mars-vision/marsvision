@@ -6,6 +6,9 @@ from sklearn.preprocessing import LabelEncoder
 import pickle
 
 # Utility file to create testing files for use in our unit tests
+# Save a model for our model class 
+# And a csv for our dataloader
+
 current_dir = os.path.dirname(__file__)
 test_image_path = os.path.join(current_dir, "test_images_loader")
 test_model_path = os.path.join(current_dir, "testing_models")
