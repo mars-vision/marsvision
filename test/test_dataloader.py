@@ -11,7 +11,7 @@ class TestDataLoader(TestCase):
     def setUp(self):
         # Instantiate loader and set working directory
         self.current_dir = os.path.dirname(__file__)
-        self.test_image_path = os.path.join(self.current_dir, "test_images_loader")
+        self.test_image_path = os.path.join(self.current_dir, "test_data")
         
         # For testing data loader with provided paths
         self.loader = DataLoader(self.test_image_path, self.test_image_path)
@@ -27,7 +27,6 @@ class TestDataLoader(TestCase):
                         self.expected_loaded_images.append(img)
 
         # Calculate expected features which should match with the loader
-        detector  = cv2.ORB_create()
         self.expected_features = [FeatureExtractor.extract_features(image) for image in self.expected_loaded_images]
         self.loader.data_reader()
         self.loader.data_transformer()
@@ -36,7 +35,7 @@ class TestDataLoader(TestCase):
         self.assertTrue(np.array_equal(self.expected_loaded_images, self.loader.images))
 
     def test_data_transformer(self):
-        self.assertTrue(np.array_equal(self.expected_features, self.expected_features))
+        self.assertTrue(np.array_equal(self.expected_features, self.loader.feature_list))
 
     def test_data_writer(self):
             # Write a test csv file, test against an expected file to ensure a match

@@ -12,7 +12,7 @@ class TestModel(TestCase):
         # Run the dataloader to get a dataframe of image features and classes
         # So we can pass data into our model trainer
         self.current_dir = os.path.dirname(__file__)
-        test_image_path = os.path.join(self.current_dir, "test_images_loader")
+        test_image_path = os.path.join(self.current_dir, "test_data")
 
         # Load test images into memory using DataLoader utility
         self.dataloader = DataLoader(test_image_path, test_image_path)

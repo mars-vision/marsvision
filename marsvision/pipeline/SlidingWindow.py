@@ -100,7 +100,7 @@ class SlidingWindow:
             "window_height":  self.window_height,
             "filename": filename
         }
-        image_dataframe = pd.DataFrame(data=image_data_row, index=[0])
+        image_dataframe = pd.DataFrame(data=image_data_row)
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
         
       
