@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Table Of Contents &mdash; marsvision 0.1.0 documentation</title>
+  <title>marsvision.pipeline.Model module &mdash; marsvision 0.1.0 documentation</title>
   
 
   
@@ -28,7 +28,8 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="marsvision.pipeline package" href="marsvision.pipeline.html" /> 
+    <link rel="next" title="marsvision.pipeline.SlidingWindow module" href="marsvision.pipeline.SlidingWindow.html" />
+    <link rel="prev" title="marsvision.pipeline.KeypointFeatureExtractor module" href="marsvision.pipeline.KeypointFeatureExtractor.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -128,8 +129,8 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a></li>
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a></li>
 </ul>
@@ -166,7 +167,7 @@
   <ul class="pytorch-breadcrumbs">
     
       <li>
-        <a href="#">
+        <a href="index.html">
           
             Docs
           
@@ -174,13 +175,15 @@
       </li>
 
         
-      <li>Table Of Contents</li>
+          <li><a href="marsvision.pipeline.html">marsvision.pipeline package</a> &gt;</li>
+        
+      <li>marsvision.pipeline.Model module</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="_sources/marsvision.pipeline.Model.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -203,50 +206,93 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" class="pytorch-article">
               
-  <div class="section" id="table-of-contents">
-<h1>Table Of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="marsvision-package">
-<h2>marsvision package<a class="headerlink" href="#marsvision-package" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="subpackages">
-<h3>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h3>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.pipeline.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.pipeline.ConvNet.html">marsvision.pipeline.ConvNet module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.pipeline.FeatureExtractor.html">marsvision.pipeline.FeatureExtractor module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.pipeline.KeypointFeatureExtractor.html">marsvision.pipeline.KeypointFeatureExtractor module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.pipeline.Model.html">marsvision.pipeline.Model module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.pipeline.SlidingWindow.html">marsvision.pipeline.SlidingWindow module</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.pipeline.html#module-marsvision.pipeline">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.utilities.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.utilities.DataLoader.html">marsvision.utilities.DataLoader module</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.utilities.html#module-marsvision.utilities">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.vision.html#module-marsvision.vision">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-<div class="section" id="module-marsvision">
-<span id="module-contents"></span><h3>Module contents<a class="headerlink" href="#module-marsvision" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="contents">
-<h3>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h3>
-<div class="toctree-wrapper compound">
-</div>
-</div>
-</div>
+  <div class="section" id="module-marsvision.pipeline.Model">
+<span id="marsvision-pipeline-model-module"></span><h1>marsvision.pipeline.Model module<a class="headerlink" href="#module-marsvision.pipeline.Model" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="marsvision.pipeline.Model.Model">
+<em class="property">class </em><code class="sig-prename descclassname">marsvision.pipeline.Model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'pytorch'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt id="marsvision.pipeline.Model.Model.PYTORCH">
+<code class="sig-name descname">PYTORCH</code><em class="property"> = 'pytorch'</em><a class="headerlink" href="#marsvision.pipeline.Model.Model.PYTORCH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="marsvision.pipeline.Model.Model.SKLEARN">
+<code class="sig-name descname">SKLEARN</code><em class="property"> = 'sklearn'</em><a class="headerlink" href="#marsvision.pipeline.Model.Model.SKLEARN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'pytorch'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model class that serves as an abstract wrapper for either an sklearn or pytorch model.</p>
+<p>Parameters:</p>
+<p>training_images (numpy.ndarray): Batch of images to train on 
+training_labels: Class labels for the training images
+model: Either an sklearn machine learning model, or a pytorch neural network.
+model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.cross_validate">
+<code class="sig-name descname">cross_validate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_folds</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">scoring</span><span class="p">:</span> <span class="n">list</span> <span class="o">=</span> <span class="default_value">['accuracy', 'precision', 'recall', 'roc_auc']</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.cross_validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run cross validation on the model with its training data and labels. Store results in a cv_results member.</p>
+<p>Parameters:</p>
+<p>scoring (list): List of sklearn cross validation scoring identifiers. 
+Default: [“accuracy”, “precision”, “recall”, “roc_auc”]. Assumes binary classification.
+Valid IDs are SKLearn classification identifiers.
+<a class="reference external" href="https://scikit-learn.org/stable/modules/model_evaluation.html">https://scikit-learn.org/stable/modules/model_evaluation.html</a></p>
+<p>n_folds (int): Number of cross validation folds. Default 10.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.load_model">
+<code class="sig-name descname">load_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">model_type</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.load_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a model into this object from a pickle file, into the self.model member.</p>
+<p>Parameters:
+out_path(str): The input location of the file to be read.
+model_type(str): The model type. Either “sklearn” or “pytorch”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a prediction from the trained model in this object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.save_model">
+<code class="sig-name descname">save_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'model.p'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.save_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a pickle file containing this object’s model.</p>
+<p>Parameters:
+out_path (str): The output location for the file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.set_extracted_features">
+<code class="sig-name descname">set_extracted_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.set_extracted_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.train_model">
+<code class="sig-name descname">train_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains a classifier using this object’s configuration, as specified in the construct.</p>
+<p>Either an SKLearn or Pytorch model will be trained on this object’s data.</p>
+<p>The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module.</p>
+<p>The Pytorch model will be trained by running a CNN on the image data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.write_cv_results">
+<code class="sig-name descname">write_cv_results</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'cv_test_results.txt'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.write_cv_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save cross validation results to a file. Shows results for individual folds, and the mean result for all folds,
+for all user specified classification metrics.</p>
+<p>Parameters:
+output_path (str): Path and file to write the results to.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -275,15 +321,7 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Table Of Contents</a><ul>
-<li><a class="reference internal" href="#marsvision-package">marsvision package</a><ul>
-<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
-<li><a class="reference internal" href="#module-marsvision">Module contents</a></li>
-<li><a class="reference internal" href="#contents">Contents</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">marsvision.pipeline.Model module</a></li>
 </ul>
 
             </div>

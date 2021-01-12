@@ -12,3 +12,5 @@ pip install pytorch_sphinx_theme
 pip install matplotlib
 pip install opencv-python
 pip install scikit-learn
+pip install mypy
+pip install exif

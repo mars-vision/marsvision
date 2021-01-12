@@ -154,7 +154,7 @@ class Model:
                 pickle.dump(self.model, out_file)
                 
         if self.model_type == Model.PYTORCH: # pragma: no cover
-            torch.save(model, out_filename)
+            torch.save(self.model, out_path)
 
 
     def load_model(self, input_path: str, model_type: str):
