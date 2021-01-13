@@ -45,7 +45,7 @@ class TestDataLoader(TestCase):
             output_csv_path = os.path.join(self.test_image_path, "output.csv")
             test_df = pd.read_csv(output_csv_path)
             os.remove(output_csv_path)
-            assert_frame_equal(expected_df, test_df)
+            assert_frame_equal(expected_df, test_df, check_like=True)
 
 
     
