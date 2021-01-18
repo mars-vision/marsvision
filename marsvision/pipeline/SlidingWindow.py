@@ -1,4 +1,5 @@
-from marsvision.pipeline import Model
+from marsvision.pipeline.Model import Model
+from typing import TypeVar
 import sqlite3
 import pandas as pd
 import cv2
@@ -53,7 +54,7 @@ class SlidingWindow:
 
         # Open the DB connection and write global attributes
         self.conn = sqlite3.connect(self.db_path)
-        self.write_global_to_sql(filename)
+        self.write_global_to_sql(str(filename))
 
         #  Get the primary key (auto incremented integer) of the new table we just wrote
         #  So that we can pass it onto the window
@@ -63,8 +64,7 @@ class SlidingWindow:
 
         for y in range(0, image.shape[0], self.stride_x):
             for x in range(0, image.shape[1], self.stride_y):
-                # Store window attributes in a dictionary structure
-                current_window_dict = {}
+
                 # Slice window either to edge of image, or to end of window
                 y_slice = min(image.shape[0] - y, self.window_height)
                 x_slice = min(image.shape[1] - x, self.window_length)
@@ -100,7 +100,7 @@ class SlidingWindow:
             "window_height":  self.window_height,
             "filename": filename
         }
-        image_dataframe = pd.DataFrame(data=image_data_row, index=[0])
+        image_dataframe = pd.DataFrame(data=image_data_row)
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
         
       

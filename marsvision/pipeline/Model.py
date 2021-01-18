@@ -2,11 +2,8 @@ import numpy as np
 import sklearn
 import os
 import torch
-import torch.optim as optim
 import pickle
-from torch.utils.data import DataLoader
-from marsvision.pipeline import FeatureExtractor
-import torch.nn as nn
+from marsvision.pipeline.FeatureExtractor import *
 from sklearn.model_selection import cross_validate, StratifiedKFold
 
 class Model:
