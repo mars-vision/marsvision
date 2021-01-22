@@ -13,7 +13,7 @@ class TestSlidingWindow(TestCase):
         self.model.load_model(test_model_path, "sklearn")
         self.test_image = cv2.imread(os.path.join(test_file_path, "marsface.jpg"))
         sw_test = SlidingWindow(self.model, os.path.join(test_file_path, "marsvision.db"))
-        #sw_test.sliding_window_predict(self.test_image)
+        sw_test.sliding_window_predict(self.test_image)
         
 
 

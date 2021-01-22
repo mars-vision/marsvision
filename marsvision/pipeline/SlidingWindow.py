@@ -37,7 +37,7 @@ class SlidingWindow:
         self.model = model
         self.db_path = db_path
         
-    def sliding_window_predict(self, image, filename: str = None):
+    def sliding_window_predict(self, image, filename: str = ""):
         """
             Runs the sliding window algorithm
             and makes a prediction for each window.
@@ -48,13 +48,15 @@ class SlidingWindow:
 
             Parameters
 
-            image: Image data represented as a numpy.ndarray.
+            image (numpy.ndarray): Image data represented as a numpy.ndarray.
+            filename (str): Name of the given file.
 
         """
 
         # Open the DB connection and write global attributes
         self.conn = sqlite3.connect(self.db_path)
-        self.write_global_to_sql(str(filename))
+        self.create_sql_table()
+        self.write_global_to_sql(filename)
 
         #  Get the primary key (auto incremented integer) of the new table we just wrote
         #  So that we can pass it onto the window
@@ -64,18 +66,38 @@ class SlidingWindow:
 
         for y in range(0, image.shape[0], self.stride_x):
             for x in range(0, image.shape[1], self.stride_y):
-
                 # Slice window either to edge of image, or to end of window
                 y_slice = min(image.shape[0] - y, self.window_height)
                 x_slice = min(image.shape[1] - x, self.window_length)
                 window = image[y:y_slice + y + 1, x:x_slice + x + 1]
-                
+
                 # Predict with model, store image coordinates of window in database
                 self.write_window_to_sql(self.model.predict(window), x, y, global_id)
 
         # We're done with the database by this point, so close the connection 
         self.conn.close()
+
+    def create_sql_table(self):
+        """
+            Helper that creates a global table if not present.
             
+            This is used because we need to create entries with auto incremented IDs to pass to write_window_to_sql.
+
+        """
+        sql = """
+            CREATE TABLE IF NOT EXISTS global (
+                "id"	INTEGER,
+                "filename"	REAL,
+                "stride_length_x"	INTEGER,
+                "stride_length_y"	INTEGER,
+                "window_length"	INTEGER,
+                "window_height"	INTEGER,
+                PRIMARY KEY("id" AUTOINCREMENT)
+            );
+        """
+        c = self.conn.cursor()
+        c.execute(sql)
+                    
     def write_global_to_sql(self, filename: str):
         """
             Write to the global table in the database.
@@ -90,17 +112,15 @@ class SlidingWindow:
             Parameters
             
             filename(str): File name of the image. Can be used to derive the observation ID.
-
-
         """
         image_data_row = {
             "stride_length_x": self.stride_x,
             "stride_length_y": self.stride_y,
             "window_length": self.window_length,
             "window_height":  self.window_height,
-            "filename": filename
+            "filename": filename,
         }
-        image_dataframe = pd.DataFrame(data=image_data_row)
+        image_dataframe = pd.DataFrame(data=image_data_row, index=[0])
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
         
       
