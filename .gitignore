@@ -8,6 +8,7 @@ __pycache__/
 # Data
 mars-dataset/
 Prototyping/Data
+test/test_files/marsvision.db
 
 
 #VSCode
@@ -33,5 +34,3 @@ doc/build/
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-
