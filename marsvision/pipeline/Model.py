@@ -5,6 +5,7 @@ import torch
 import pickle
 from marsvision.pipeline.FeatureExtractor import *
 from sklearn.model_selection import cross_validate, StratifiedKFold
+from typing import List
 
 class Model:
     PYTORCH = "pytorch"
@@ -43,13 +44,22 @@ class Model:
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict(self, image: np.ndarray):
+    def predict(self, image_list: List[np.ndarray]):
         """
-            Return a prediction from the trained model in this object.
+            Run inference on a list of images using the currently instantiated model.
+            
+            ---
+
+            Parameters:
+                image_list (List[np.ndarray]): Batch of images to run inference on with this model.
         """
         if self.model_type == Model.SKLEARN:
-            image_features = np.array(FeatureExtractor.extract_features(image))
-            return self.model.predict(image_features.reshape(1, -1))
+            inference_list = []
+            for image in image_list:
+                image_features = np.array(FeatureExtractor.extract_features(image))
+                inference_list.append(self.model.predict(image_features.reshape(-1, 1)))
+            return inference_list
+
         elif self.model_type == Model.PYTORCH: # pragma: no cover
             # TODO: Implement pytorch for model class
             Exception("Invalid model specified in marsvision.pipeline.Model")

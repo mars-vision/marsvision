@@ -25,7 +25,6 @@ class TestModel(TestCase):
         self.model_sklearn.train_model()
 
 
-
     def test_save_load_inference(self):
         # Make a prediction on an image, 
         # save the model,
@@ -39,7 +38,7 @@ class TestModel(TestCase):
         test_model.load_model("model.p", "sklearn")
         os.remove("model.p")
         test_prediction = test_model.predict(predict_image)
-        self.assertEqual(test_prediction, expected_prediction)
+        self.assertEqual(test_prediction[0], expected_prediction)
         
     def test_write_cv_results(self):
         # Run model's cross validation, save file

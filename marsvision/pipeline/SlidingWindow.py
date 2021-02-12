@@ -3,6 +3,8 @@ from typing import TypeVar
 import sqlite3
 import pandas as pd
 import cv2
+from typing import List
+import numpy as np
 
 class SlidingWindow:
     def __init__(self, model: Model, 
@@ -37,7 +39,7 @@ class SlidingWindow:
         self.model = model
         self.db_path = db_path
         
-    def sliding_window_predict(self, image, filename: str = ""):
+    def sliding_window_predict(self, image_list: np.ndarray, filename_list: List[str]):
         """
             Runs the sliding window algorithm
             and makes a prediction for each window.
@@ -48,31 +50,42 @@ class SlidingWindow:
 
             Parameters
 
-            image (numpy.ndarray): Image data represented as a numpy.ndarray.
-            filename (str): Name of the given file.
+            image_list (numpy.ndarray): Image data represented as a numpy.ndarray.
+            filename_list (List[str]): List of file names associated with the input image list.
 
         """
 
         # Open the DB connection and write global attributes
         self.conn = sqlite3.connect(self.db_path)
         self.create_sql_table()
-        self.write_global_to_sql(filename)
+        self.write_global_to_sql(filename_list)
+
+        # Number of images in the given batch
+        batch_size = len(image_list)
 
         #  Get the primary key (auto incremented integer) of the new table we just wrote
         #  So that we can pass it onto the window
         c = self.conn.cursor()
-        c.execute("SELECT id FROM global ORDER BY id DESC LIMIT 1")
-        global_id = c.fetchone()[0]
+        c.execute("SELECT id FROM global ORDER BY id DESC LIMIT " + str(batch_size))
 
-        for y in range(0, image.shape[0], self.stride_x):
-            for x in range(0, image.shape[1], self.stride_y):
+        # Reverse returned id's to match up with the image_list and filename_list arrays.
+        global_id_list = c.fetchall().reverse()
+        print("SHAPE" + str(image_list.shape))
+        width = image_list.shape[1]
+        height = image_list.shape[2]
+
+        for y in range(0, width, self.stride_x):
+            for x in range(0, height, self.stride_y):
                 # Slice window either to edge of image, or to end of window
-                y_slice = min(image.shape[0] - y, self.window_height)
-                x_slice = min(image.shape[1] - x, self.window_length)
-                window = image[y:y_slice + y + 1, x:x_slice + x + 1]
+                y_slice = min(width - y, self.window_height)
+                x_slice = min(height - x, self.window_length)
+
+                # Needs to be a vector of windows,
+                # to send to the model predict function as a "list of images" 
+                window_list = image[:, y:y_slice + y + 1, x:x_slice + x + 1, :]
 
                 # Predict with model, store image coordinates of window in database
-                self.write_window_to_sql(self.model.predict(window), x, y, global_id)
+                self.write_window_to_sql(self.model.predict(window_list), x, y, global_id_list)
 
         # We're done with the database by this point, so close the connection 
         self.conn.close()
@@ -98,9 +111,9 @@ class SlidingWindow:
         c = self.conn.cursor()
         c.execute(sql)
                     
-    def write_global_to_sql(self, filename: str):
+    def write_global_to_sql(self, filename_list: str):
         """
-            Write to the global table in the database.
+            Write entries for every image in the current batch of images.            
 
             The global table holds all data that is shared by all windows when we run the sliding window algorithm 
             over a particular image.
@@ -111,26 +124,39 @@ class SlidingWindow:
 
             Parameters
             
-            filename(str): File name of the image. Can be used to derive the observation ID.
+            filename_list (str): File name of the image. Can be used to derive the observation ID.
         """
-        image_data_row = {
-            "stride_length_x": self.stride_x,
-            "stride_length_y": self.stride_y,
-            "window_length": self.window_length,
-            "window_height":  self.window_height,
-            "filename": filename,
-        }
-        image_dataframe = pd.DataFrame(data=image_data_row, index=[0])
+        row_count = len(filename_list)
+        image_dataframe = pd.DataFrame({
+                    "stride_length_x": [self.stride_x] * row_count,
+                    "stride_length_y": [self.stride_y] * row_count,
+                    "window_length": [self.window_length] * row_count,
+                    "window_height": [self.window_height] * row_count,
+                    "filename": filename_list
+            }
+        )
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
         
-      
 
-    def write_window_to_sql(self, prediction: int, window_coord_x: int, window_coord_y: int, global_id: int):
-        window_row = {
-            "prediction": prediction, 
-            "coord_x": window_coord_x,
-            "coord_y": window_coord_y,
-            "global_id": global_id
-        }
-        window_row_data = pd.DataFrame(data=window_row, index=[0])
-        window_row_data.to_sql('windows', con=self.conn, if_exists="append", index=False)
+    def write_window_to_sql(self, prediction_list: List[int], window_coord_x: int, window_coord_y: int, global_id: int):
+        """
+            Write a batch of inferences to the database. Include information about the window's location in its parent image,
+            as well as a reference key to the parent image in the global table.
+
+            ----
+
+            Parameters
+            prediction_list (List[int]): Batch of label inferrences from the model.
+            window_coord_x (int): x coordinate of the window on the parent image.
+            window_coord_y (int): y coordinate of the window on the parent image.
+            gloal_id (int): ID of parent image in Global table (which holds information about the image).
+        """
+        row_count = len(prediction_list)
+        window_dataframe = pd.DataFrame({
+                    "prediction": prediction_list,
+                    "coord_x": [window_coord_x] * len(row_count),
+                    "coord_y": [window_coord_y] * len(row_count),
+                    "global_id": [global_id] * len(row_count)
+                },
+        )
+        window_dataframe.to_sql('windows', con=self.conn, if_exists="append", index=False)

@@ -1,10 +1,12 @@
 from marsvision.pipeline import SlidingWindow
 from marsvision.pipeline import Model
+from marsvision.utilities import DataLoader
 from unittest import TestCase
 import cv2
 import os
 import pandas as pd
 import sqlite3
+import numpy as np
 
 class TestSlidingWindow(TestCase):
     
@@ -13,8 +15,13 @@ class TestSlidingWindow(TestCase):
         test_file_path = os.path.join(os.path.dirname(__file__), "test_files")
         test_model_path = os.path.join(test_file_path, "test_lr_model.p")
 
+
+        # Get the images in test_data as a batch
         model.load_model(test_model_path, "sklearn")
-        test_image = cv2.imread(os.path.join(test_file_path, "marsface.jpg"))
+        loader = DataLoader("test_data")
+        loader.data_reader()
+        test_images = np.array(loader.images)
+        test_filenames = loader.file_names
 
         # Testing is done by writing a new DB file 
         # and comparing it with an "expected" database file
@@ -33,9 +40,9 @@ class TestSlidingWindow(TestCase):
         sw_test = SlidingWindow(model)
         if not os.path.isfile(expected_db_path):
             sw_test.db_path = expected_db_path
-            sw_test.sliding_window_predict(test_image)
+            sw_test.sliding_window_predict(test_images, test_filenames)
         sw_test.db_path = test_db_path
-        sw_test.sliding_window_predict(test_image)
+        sw_test.sliding_window_predict(test_images, test_filenames)
 
         test_conn = sqlite3.connect(test_db_path)
         expected_conn = sqlite3.connect(expected_db_path)
