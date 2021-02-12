@@ -6,8 +6,15 @@
     "configurations": [
 
         {
-            "name": "Python: Data Loader Arguments",
+            "name": "Python: Current File",
             "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console":"integratedTerminal",
+        },
+        {
+            "name": "Python: Data Loader Arguments",
+            "type": "python", 
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",

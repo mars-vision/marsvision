@@ -14,11 +14,12 @@ class TestSlidingWindow(TestCase):
         model = Model()
         test_file_path = os.path.join(os.path.dirname(__file__), "test_files")
         test_model_path = os.path.join(test_file_path, "test_lr_model.p")
+        test_data_path = os.path.join(os.path.dirname(__file__), "test_data")
 
 
         # Get the images in test_data as a batch
         model.load_model(test_model_path, "sklearn")
-        loader = DataLoader("test_data")
+        loader = DataLoader(test_data_path)
         loader.data_reader()
         test_images = np.array(loader.images)
         test_filenames = loader.file_names
@@ -28,12 +29,7 @@ class TestSlidingWindow(TestCase):
         test_db_path = os.path.join(test_file_path, "marsvision.db")
         expected_db_path = os.path.join(test_file_path, "marsvision_expected.db")
 
-        # Ensure there is no test db file
-        try:
-            os.remove(test_db_path)
-        except OSError:
-            pass
-        
+
         # If no expected db file is present, create one.
         # When we intentionally want to change database output,
         # we can delete the marsvision_expected file and run tests to create a new one.

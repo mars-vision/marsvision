@@ -54,11 +54,11 @@ class Model:
                 image_list (List[np.ndarray]): Batch of images to run inference on with this model.
         """
         if self.model_type == Model.SKLEARN:
-            inference_list = []
+            image_feature_list = []
             for image in image_list:
-                image_features = np.array(FeatureExtractor.extract_features(image))
-                inference_list.append(self.model.predict(image_features.reshape(-1, 1)))
-            return inference_list
+                image_feature_list.append(FeatureExtractor.extract_features(image))
+            inference_list = self.model.predict(image_feature_list)
+            return list(map(int, inference_list))
 
         elif self.model_type == Model.PYTORCH: # pragma: no cover
             # TODO: Implement pytorch for model class

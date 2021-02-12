@@ -69,8 +69,10 @@ class SlidingWindow:
         c.execute("SELECT id FROM global ORDER BY id DESC LIMIT " + str(batch_size))
 
         # Reverse returned id's to match up with the image_list and filename_list arrays.
-        global_id_list = c.fetchall().reverse()
-        print("SHAPE" + str(image_list.shape))
+        global_id_list = c.fetchall()
+        global_id_list.reverse()
+        global_id_list = list(zip(*global_id_list))[0]
+
         width = image_list.shape[1]
         height = image_list.shape[2]
 
@@ -82,7 +84,7 @@ class SlidingWindow:
 
                 # Needs to be a vector of windows,
                 # to send to the model predict function as a "list of images" 
-                window_list = image[:, y:y_slice + y + 1, x:x_slice + x + 1, :]
+                window_list = image_list[:, y:y_slice + y + 1, x:x_slice + x + 1, :]
 
                 # Predict with model, store image coordinates of window in database
                 self.write_window_to_sql(self.model.predict(window_list), x, y, global_id_list)
@@ -138,7 +140,7 @@ class SlidingWindow:
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
         
 
-    def write_window_to_sql(self, prediction_list: List[int], window_coord_x: int, window_coord_y: int, global_id: int):
+    def write_window_to_sql(self, prediction_list: List[int], window_coord_x: int, window_coord_y: int, global_id_list: List[int]):
         """
             Write a batch of inferences to the database. Include information about the window's location in its parent image,
             as well as a reference key to the parent image in the global table.
@@ -154,9 +156,9 @@ class SlidingWindow:
         row_count = len(prediction_list)
         window_dataframe = pd.DataFrame({
                     "prediction": prediction_list,
-                    "coord_x": [window_coord_x] * len(row_count),
-                    "coord_y": [window_coord_y] * len(row_count),
-                    "global_id": [global_id] * len(row_count)
+                    "coord_x": [window_coord_x] * row_count,
+                    "coord_y": [window_coord_y] *row_count,
+                    "global_id": global_id_list
                 },
         )
         window_dataframe.to_sql('windows', con=self.conn, if_exists="append", index=False)
