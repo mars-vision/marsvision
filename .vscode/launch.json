@@ -8,8 +8,7 @@
         {
             "name": "Python: Current File",
             "type": "python",
-            "request": "launch",
-            "program": "${file}",
+            "request": "test",
             "console":"integratedTerminal",
         },
         {

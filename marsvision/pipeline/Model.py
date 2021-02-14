@@ -44,16 +44,27 @@ class Model:
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict(self, image_list: List[np.ndarray]):
+    def predict(self, image_list: np.ndarray):
         """
-            Run inference on a list of images using the currently instantiated model.
+            Run inference using self.model on a list of images using the currently instantiated model.
             
+            This model can either be an sklearn model or a pytorch model.
+
             ---
 
             Parameters:
                 image_list (List[np.ndarray]): Batch of images to run inference on with this model.
         """
+
+        # Handle the case of a single image by casting it as a list with itself in it
+        if len(image_list.shape) == 3:
+            image_list = [image_list]
+
         if self.model_type == Model.SKLEARN:
+            # Iterate images in batch,
+            # Extract features,
+            # Use self.model for inference on each
+            # Return a list of inferences
             image_feature_list = []
             for image in image_list:
                 image_feature_list.append(FeatureExtractor.extract_features(image))
@@ -66,6 +77,13 @@ class Model:
 
 
     def set_extracted_features(self):
+        """
+            Run feature extraction training images defined in self.training_images.
+
+            For more details on feature extraction, see the FeatureExtractor module.
+
+        """
+
         self.extracted_features = [FeatureExtractor.extract_features(image) for image in self.training_images]
 
     def cross_validate(self, 
@@ -83,7 +101,6 @@ class Model:
             Default: ["accuracy", "precision", "recall", "roc_auc"]. Assumes binary classification.
             Valid IDs are SKLearn classification identifiers.
             https://scikit-learn.org/stable/modules/model_evaluation.html
-
             n_folds (int): Number of cross validation folds. Default 10.
 
         """
@@ -127,11 +144,7 @@ class Model:
         """
             Trains a classifier using this object's configuration, as specified in the construct. 
             
-            Either an SKLearn or Pytorch model will be trained on this object's data.
-
-            The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module.
-
-            The Pytorch model will be trained by running a CNN on the image data.
+            Either an SKLearn or Pytorch model will be trained on this object's data. The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module. The Pytorch model will be trained by running a CNN on the image data.
         """
 
         # Todo: Implement pytorch training

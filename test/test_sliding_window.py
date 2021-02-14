@@ -29,7 +29,7 @@ class TestSlidingWindow(TestCase):
         test_db_path = os.path.join(test_file_path, "marsvision.db")
         expected_db_path = os.path.join(test_file_path, "marsvision_expected.db")
 
-
+ 
         # If no expected db file is present, create one.
         # When we intentionally want to change database output,
         # we can delete the marsvision_expected file and run tests to create a new one.

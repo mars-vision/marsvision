@@ -38,7 +38,7 @@ class TestModel(TestCase):
         test_model.load_model("model.p", "sklearn")
         os.remove("model.p")
         test_prediction = test_model.predict(predict_image)
-        self.assertEqual(test_prediction[0], expected_prediction)
+        self.assertEqual(test_prediction[0], expected_prediction[0])
         
     def test_write_cv_results(self):
         # Run model's cross validation, save file

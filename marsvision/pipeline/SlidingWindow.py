@@ -113,7 +113,7 @@ class SlidingWindow:
         c = self.conn.cursor()
         c.execute(sql)
                     
-    def write_global_to_sql(self, filename_list: str):
+    def write_global_to_sql(self, filename_list: List[str]):
         """
             Write entries for every image in the current batch of images.            
 
@@ -126,7 +126,7 @@ class SlidingWindow:
 
             Parameters
             
-            filename_list (str): File name of the image. Can be used to derive the observation ID.
+            filename_list (List[str]): List of file names of the image batch. Can be used to derive the observation ID.
         """
         row_count = len(filename_list)
         image_dataframe = pd.DataFrame({
@@ -140,7 +140,7 @@ class SlidingWindow:
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
         
 
-    def write_window_to_sql(self, prediction_list: List[int], window_coord_x: int, window_coord_y: int, global_id_list: List[int]):
+    def write_window_to_sql(self, prediction_list: List[int], window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray):
         """
             Write a batch of inferences to the database. Include information about the window's location in its parent image,
             as well as a reference key to the parent image in the global table.
@@ -148,7 +148,7 @@ class SlidingWindow:
             ----
 
             Parameters
-            prediction_list (List[int]): Batch of label inferrences from the model.
+            prediction_list (np.ndarray): Batch of label inferrences from the model.
             window_coord_x (int): x coordinate of the window on the parent image.
             window_coord_y (int): y coordinate of the window on the parent image.
             gloal_id (int): ID of parent image in Global table (which holds information about the image).
