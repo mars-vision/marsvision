@@ -73,14 +73,14 @@ class SlidingWindow:
         global_id_list.reverse()
         global_id_list = list(zip(*global_id_list))[0]
 
-        width = image_list.shape[1]
-        height = image_list.shape[2]
+        image_width = image_list.shape[1]
+        image_height = image_list.shape[2]
 
-        for y in range(0, width, self.stride_x):
-            for x in range(0, height, self.stride_y):
+        for y in range(0, image_width, self.stride_x):
+            for x in range(0, image_height, self.stride_y):
                 # Slice window either to edge of image, or to end of window
-                y_slice = min(width - y, self.window_height)
-                x_slice = min(height - x, self.window_length)
+                y_slice = min(image_width - y, self.window_height)
+                x_slice = min(image_height - x, self.window_length)
 
                 # Needs to be a vector of windows,
                 # to send to the model predict function as a "list of images" 

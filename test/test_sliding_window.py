@@ -11,11 +11,11 @@ import numpy as np
 class TestSlidingWindow(TestCase):
     
     def test_sliding_window_predict(self):
-        model = Model()
+        
         test_file_path = os.path.join(os.path.dirname(__file__), "test_files")
         test_model_path = os.path.join(test_file_path, "test_lr_model.p")
         test_data_path = os.path.join(os.path.dirname(__file__), "test_data/dust")
-
+        model = Model(test_model_path, "sklearn")
 
         # Get the images in test_data as a batch
         model.load_model(test_model_path, "sklearn")

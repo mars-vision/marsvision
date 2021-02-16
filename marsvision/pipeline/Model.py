@@ -12,7 +12,7 @@ class Model:
     SKLEARN = "sklearn"
 
     def __init__(self, 
-        model = None,
+        model,
         model_type: str = PYTORCH,
         **kwargs):
         """
@@ -25,7 +25,7 @@ class Model:
 
             training_images (numpy.ndarray): Batch of images to train on 
             training_labels: Class labels for the training images
-            model: Either an sklearn machine learning model, or a pytorch neural network.
+            model: Either an sklearn machine learning model, or a pytorch neural network. Can be a path to a file or a model object.
             model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.
         """
 
@@ -35,11 +35,11 @@ class Model:
         if "training_labels" in kwargs:
             self.training_labels = kwargs["training_labels"]
 
-        if "num_epochs" in kwargs:
-            self.num_epochs = kwargs["num_epochs"]
-
         self.model_type = model_type
-        self.model = model
+        if type(model) == str:
+            self.load_model(model, self.model_type)
+        else:
+            self.model = model
         
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
@@ -75,7 +75,21 @@ class Model:
             # TODO: Implement pytorch for model class
             Exception("Invalid model specified in marsvision.pipeline.Model")
 
+    def set_training_data(self, training_images: np.ndarray, training_labels: List[str]):
+        """
+            Setter for training image data.
 
+            ---
+
+            Parameters: 
+
+            training_images (self): List of images to train the model on. Numpy is expected to be as follows: (image count, height, image width, channels)
+            training_labels (self): Labels associated with training images. Should be a list parallel to the list of training images.
+
+        """
+        self.training_images = training_images
+        self.training_labels = training_labels
+        
     def set_extracted_features(self):
         """
             Run feature extraction training images defined in self.training_images.
@@ -83,8 +97,11 @@ class Model:
             For more details on feature extraction, see the FeatureExtractor module.
 
         """
+        try:
+            self.extracted_features = [FeatureExtractor.extract_features(image) for image in self.training_images]
+        except AttributeError:
+            print("Training images need to be set before feature extraction. Call set_training_data to initialize training data.")
 
-        self.extracted_features = [FeatureExtractor.extract_features(image) for image in self.training_images]
 
     def cross_validate(self, 
              n_folds: int = 10,
@@ -115,9 +132,11 @@ class Model:
 
         # If no extracted features exist, set them for the sklearn model
         if self.model_type == Model.SKLEARN:   
-            if self.extracted_features is None:
-                self.set_extracted_features()
-            self.cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
+            self.set_extracted_features()
+            try: 
+                self.cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
+            except AttributeError:
+                print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
         elif self.model_type == Model.PYTORCH: # pragma: no cover
             # TODO: Implement pytorch cross validation
             raise  Exception("Invalid model specified in marsvision.pipeline.Model")

@@ -1,4 +1,4 @@
-from sklearn.linear_model import LogisticRegression as LR
+from sklearn.linear_model import LogisticRegression
 from marsvision.pipeline.ConvNet import ConvNet
 import pickle
 from marsvision.pipeline.Model import Model
@@ -20,7 +20,7 @@ class TestModel(TestCase):
 
         self.training_images = self.dataloader.images
         self.labels = [1 if name == "dust" else 0 for name in self.dataloader.labels]
-        self.sklearn_logistic_regression = LR()
+        self.sklearn_logistic_regression = LogisticRegression()
         self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", training_images = self.training_images, training_labels = self.labels)
         self.model_sklearn.train_model()
 
@@ -34,8 +34,7 @@ class TestModel(TestCase):
         predict_image = self.dataloader.images[0]
         expected_prediction = self.model_sklearn.predict(predict_image)
         self.model_sklearn.save_model("model.p")
-        test_model = Model()
-        test_model.load_model("model.p", "sklearn")
+        test_model = Model("model.p", "sklearn")
         os.remove("model.p")
         test_prediction = test_model.predict(predict_image)
         self.assertEqual(test_prediction[0], expected_prediction[0])
@@ -52,7 +51,6 @@ class TestModel(TestCase):
         # Save and load the model, assert equal on its attributes
         lr_before = self.model_sklearn.model
         self.model_sklearn.save_model("test_lr_model.p")
-
         self.model_sklearn.load_model("test_lr_model.p", "sklearn")
         lr_after = self.model_sklearn.model
 
