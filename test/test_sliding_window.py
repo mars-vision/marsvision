@@ -14,7 +14,7 @@ class TestSlidingWindow(TestCase):
         model = Model()
         test_file_path = os.path.join(os.path.dirname(__file__), "test_files")
         test_model_path = os.path.join(test_file_path, "test_lr_model.p")
-        test_data_path = os.path.join(os.path.dirname(__file__), "test_data")
+        test_data_path = os.path.join(os.path.dirname(__file__), "test_data/dust")
 
 
         # Get the images in test_data as a batch
@@ -51,7 +51,7 @@ class TestSlidingWindow(TestCase):
         test_image_table = pd.read_sql("SELECT * FROM windows", test_conn)
         expected_image_table = pd.read_sql("SELECT * FROM windows", expected_conn)
 
-        # Remove output file; otherwise it gets appended to every time we run tests
+        #Remove output file; otherwise it gets appended to every time we run tests
         test_conn.close()
         expected_conn.close()
         os.remove(test_db_path)
