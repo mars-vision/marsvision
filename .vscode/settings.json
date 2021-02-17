@@ -1,9 +1,0 @@
-{
-    "python.pythonPath": "C:\\Users\\dpale\\anaconda3\\envs\\marsvision\\python.exe",
-    "python.testing.pytestArgs": [
-        "test"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestEnabled": true
-}
