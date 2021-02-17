@@ -7,3 +7,30 @@ __pycache__/
 
 # Data
 mars-dataset/
+Prototyping/Data
+test/test_files/marsvision.db
+
+
+#VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+# Notebook checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Sphinx documentation
+docs/build/
+doc/build/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json

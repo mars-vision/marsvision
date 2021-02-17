@@ -23,16 +23,21 @@ class FeatureExtractor:
         canny_threshold_1 (int): OpenCV Canny Threshold 1 for canny detector
         canny_threshold_2 (int):  OpenCV Canny Theshold 2 for canny detector
         """
-        img = np.array(img)
-        canny = cv2.Canny(img, canny_threshold_1, canny_threshold_2)
-        lapl = cv2.Laplacian(img, cv2.CV_64F)
-        feature_vector = [
-            np.mean(canny),
-            np.var(canny),
-            np.mean(lapl),
-            np.var(lapl),
-            np.mean(img),
-            np.var(img)
-        ]
+        feature_vector = []
+        # Exception thrown when image is null
+        try: 
+            img = np.array(img)
+            canny = cv2.Canny(img, canny_threshold_1, canny_threshold_2)
+            lapl = cv2.Laplacian(img, cv2.CV_64F)
+            feature_vector = [
+                np.mean(canny),
+                np.var(canny),
+                np.mean(lapl),
+                np.var(lapl),
+                np.mean(img),
+                np.var(img)
+            ]
+        except:
+            print("Invalid image : " + str(img))
 
         return feature_vector

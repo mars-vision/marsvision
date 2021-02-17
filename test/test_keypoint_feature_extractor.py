@@ -8,12 +8,10 @@ class TestKeypointFeatureExtractor(TestCase):
     def setUp(self):
         # Load up the matrix of expected features from keypoints
         # for our test image from our marsFeatures.npy file
-        dirname = os.path.dirname(__file__)
-        image_path = os.path.join(dirname, "marsface.jpg")
+        keypoint_feature_path = os.path.join(os.path.dirname(__file__), "test_files", "mars_test_matrix.npy")
+        image_path = os.path.join(os.path.dirname(__file__), "test_files", "marsface.jpg")
         self.img = cv2.imread(image_path)
         self.radius = 20
-        # take the means of the columns to reduce the feature matrix to a single vector
-        keypoint_feature_path = os.path.join(dirname, "mars_test_matrix.npy")
         self.expected_feature_matrix_KAZE = np.load(keypoint_feature_path)
         self.expected_keypoint_features = np.mean(self.expected_feature_matrix_KAZE, axis=0)
 
