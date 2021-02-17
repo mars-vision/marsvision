@@ -26,10 +26,6 @@ test/test_files/marsvision.db
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 
-# Sphinx documentation
-docs/build/
-doc/build/
-
 # mypy
 .mypy_cache/
 .dmypy.json
