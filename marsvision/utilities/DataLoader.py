@@ -107,6 +107,7 @@ class DataLoader:
         self.df = pd.DataFrame(data = self.feature_list)
         self.df["class"] = self.labels
         self.df["file_name"] = self.file_names
+        self.df["img_data"] = self.images
         LE = LabelEncoder()
         self.df["class_code"] = LE.fit_transform(self.df["class"])
 
