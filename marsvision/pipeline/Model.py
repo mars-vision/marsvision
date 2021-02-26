@@ -6,6 +6,8 @@ import pickle
 from marsvision.pipeline.FeatureExtractor import *
 from sklearn.model_selection import cross_validate, StratifiedKFold
 from typing import List
+import torch
+import torchvision
 
 class Model:
     PYTORCH = "pytorch"
@@ -50,6 +52,8 @@ class Model:
             
             This model can either be an sklearn model or a pytorch model.
 
+            Returns a list of inferences.
+            
             ---
 
             Parameters:
@@ -177,6 +181,50 @@ class Model:
             self.model.fit(self.extracted_features, self.training_labels)
         else:
             raise Exception("No model specified in marsvision.pipeline.Model")
+
+
+    def train_model_pytorchcnn(self, model, criterion, optimizer, scheduler, num_epochs = 25):
+
+        # Set up simple dataset with labels and image data
+        dataset = TensorDataset(Tensor(self.training_images), Tensor(self.training_labels))
+        dataset_size  = len(dataset)
+
+         # Train/Val/Test: 80/5/15
+        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [dataset_size * .8, dataset_size * .05, dataset_size * .15])
+        dataloaders = {
+            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4),
+            "eval": torch.utils.data.DataLoader(val_dataset, batch_size = 4),
+            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4)
+        }
+
+        # Parallelize if GPU is available
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+        for epoch in range(num_epochs):
+            print("Epoch: {}{}".format(epoch, num_epochs - 1))
+            print("-") * 10
+            
+            # Train/Val/Test: 80/5/15
+            for phase in ["train", "eval"]:
+                if phase == "train":
+                    model.train()
+                else:
+                    model.eval()
+                
+                running_loss = 0.0
+                running_corrects = 0
+
+                for inputs, labels in dataloaders[phase]:
+                    inputs = inputs.to(device)
+                    labels = labels.to(device)
+
+                    # Zero the gradients
+                    optimizer.zero_grad()
+
+                    # Forward pass
+                    with torch.set_grad_enabled(phase == "train"):
+                        outputs = model(inputs)
+
 
     def save_model(self, out_path: str = "model.p"):
         """
