@@ -1,6 +1,6 @@
 from marsvision.pipeline import SlidingWindow
 from marsvision.pipeline import Model
-from marsvision.utilities import DataLoader
+from marsvision.utilities import DataUtility
 from unittest import TestCase
 import cv2
 import os
@@ -19,7 +19,7 @@ class TestSlidingWindow(TestCase):
 
         # Get the images in test_data as a batch
         model.load_model(test_model_path, "sklearn")
-        loader = DataLoader(test_data_path)
+        loader = DataUtility(test_data_path)
         loader.data_reader()
         test_images = np.array(loader.images)
         test_filenames = loader.file_names

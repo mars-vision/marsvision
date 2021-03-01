@@ -191,10 +191,10 @@ class Model:
 
          # Train/Val/Test: 80/5/15
         train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [dataset_size * .8, dataset_size * .05, dataset_size * .15])
-        dataloaders = {
-            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4),
-            "eval": torch.utils.data.DataLoader(val_dataset, batch_size = 4),
-            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4)
+        DataUtilitys = {
+            "train": torch.utils.data.DataUtility(train_dataset, batch_size = 4),
+            "eval": torch.utils.data.DataUtility(val_dataset, batch_size = 4),
+            "test": torch.utils.data.DataUtility(test_dataset, batch_size = 4)
         }
 
         # Parallelize if GPU is available
@@ -214,7 +214,7 @@ class Model:
                 running_loss = 0.0
                 running_corrects = 0
 
-                for inputs, labels in dataloaders[phase]:
+                for inputs, labels in DataUtilitys[phase]:
                     inputs = inputs.to(device)
                     labels = labels.to(device)
 

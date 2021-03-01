@@ -2,24 +2,24 @@ from sklearn.linear_model import LogisticRegression
 from marsvision.pipeline.ConvNet import ConvNet
 import pickle
 from marsvision.pipeline.Model import Model
-from marsvision.utilities import DataLoader
+from marsvision.utilities import DataUtility
 from unittest import TestCase
 import os
 import numpy as np
 
 class TestModel(TestCase):
     def setUp(self):
-        # Run the dataloader to get a dataframe of image features and classes
+        # Run the DataUtility to get a dataframe of image features and classes
         # So we can pass data into our model trainer
         self.current_dir = os.path.dirname(__file__)
         test_image_path = os.path.join(self.current_dir, "test_data")
 
-        # Load test images into memory using DataLoader utility
-        self.dataloader = DataLoader(test_image_path, test_image_path)
-        self.dataloader.data_reader()
+        # Load test images into memory using DataUtility utility
+        self.DataUtility = DataUtility(test_image_path, test_image_path)
+        self.DataUtility.data_reader()
 
-        self.training_images = self.dataloader.images
-        self.labels = [1 if name == "dust" else 0 for name in self.dataloader.labels]
+        self.training_images = self.DataUtility.images
+        self.labels = [1 if name == "dust" else 0 for name in self.DataUtility.labels]
         self.sklearn_logistic_regression = LogisticRegression()
         self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", training_images = self.training_images, training_labels = self.labels)
         self.model_sklearn.train_model()
@@ -31,7 +31,7 @@ class TestModel(TestCase):
         # load the same with a new instance of Model from the file,
         # predict with the new instance,
         # assert equal
-        predict_image = self.dataloader.images[0]
+        predict_image = self.DataUtility.images[0]
         expected_prediction = self.model_sklearn.predict(predict_image)
         self.model_sklearn.save_model("model.p")
         test_model = Model("model.p", "sklearn")
