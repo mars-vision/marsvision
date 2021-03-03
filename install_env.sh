@@ -3,7 +3,8 @@ conda create --name marsvision
 source activate marsvision
 conda install -y --quiet --yes numpy pandas pytorch pytest pytest-cov
 conda install -y --quiet --yes pillow tensorboard scikit-learn
-conda install -y --quiet --yes torchvision mypy scipy matplotlib
+conda install -y --quiet --yes mypy scipy matplotlib
+conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
 conda clean -tipsy
 pip install pytorch-lightning
 pip install coveralls
