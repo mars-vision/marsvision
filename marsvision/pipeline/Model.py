@@ -5,9 +5,11 @@ import torch
 import pickle
 from marsvision.pipeline.FeatureExtractor import *
 from sklearn.model_selection import cross_validate, StratifiedKFold
+from sklearn.metrics import plot_roc_curve
 from typing import List
 import torch
 import torchvision
+import matplotlib.pyplot as plt
 
 class Model:
     PYTORCH = "pytorch"
@@ -106,6 +108,122 @@ class Model:
         except AttributeError:
             print("Training images need to be set before feature extraction. Call set_training_data to initialize training data.")
 
+    
+    def cross_validate_plot(self, title: str = "Binary Cross Validation Results"):
+        """
+            Run cross validation on a binary classification problem,
+            and make a matplotlib plot of the results.
+
+            ---
+            
+            Parameters
+
+            Title(str): Title of the figure.
+        """
+
+        fig, ax = plt.subplots()
+
+        cv_results = self.cross_validate_binary(5, ax)
+
+        fig.set_size_inches(18.5, 10.5)
+            
+        ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05],
+        title=title)
+            
+        ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+                label='Random Chance', alpha=.8)
+            
+        ax.plot(np.linspace(0, 1, 100), cv_results["mean_tpr"], color='b',
+                label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (cv_results["mean_auc"], 
+                                                            cv_results["std_auc"]),
+                lw=2, alpha=.8)
+            
+        tprs_upper = np.minimum(cv_results["mean_tpr"] + cv_results["std_tpr"], 1)
+        tprs_lower = np.maximum(cv_results["mean_tpr"] - cv_results["std_tpr"], 0)
+        ax.fill_between(np.linspace(0, 1, 100), tprs_lower, tprs_upper, color='grey', alpha=.2,
+                        label=r'$\pm$ 1 std. dev.')
+        ax.legend()
+        plt.show()
+
+        return cv_results
+
+
+    def cross_validate_binary(self, 
+             n_folds: int = 10,
+             ax = None):
+        """
+            Run cross validation on a binary classification problem and return the results as a dictionary.
+
+            This method assumes that there are only two labels in the training labels member of this class.
+
+            --------
+            
+            Parameters:
+
+            n_dolfds (int): Number of folds.
+
+        """
+
+        # Set stratified k folds using n_folds parameters
+        stratified_kfold = StratifiedKFold(n_folds)
+
+        # If no extracted features exist, set them for the sklearn model
+        if self.model_type == Model.SKLEARN:   
+            try: 
+                self.set_extracted_features()
+                x = np.array(self.extracted_features)
+                y = np.array(self.training_labels)
+                precisions = []
+                aucs = []
+                accs = []
+                recalls = []
+                visualizations = []
+                tprs = []
+                x_domain = np.linspace(0, 1, 100)
+
+                for i, (train, test) in enumerate(stratified_kfold.split(self.extracted_features, self.training_labels)):
+                    self.model.fit(x[train], y[train])
+                    viz = plot_roc_curve(self.model, x[test], y[test])
+                    plt.close()
+                    visualizations.append(plot_roc_curve(self.model, x[test], y[test], ax = ax))
+                    interp_tpr = np.interp(x_domain, viz.fpr, viz.tpr)
+                    interp_tpr[0] = 0.0
+                    tprs.append(interp_tpr)
+                    aucs.append(viz.roc_auc)
+
+                    y_predict = np.array(self.model.predict(x[test]))
+                    y_test = np.array(y[test])
+                    false_negatives = np.sum(y_test[y_predict == 0] != y_predict[y_predict == 0])
+                    true_positives = np.sum(y_test[y_predict == 1] == y_predict[y_predict == 1])
+                    false_positives = np.sum(y_test[y_predict == 1] != y_predict[y_predict == 1])
+
+                    precisions.append(true_positives / (true_positives + false_positives))
+                    recalls.append(true_positives / (false_negatives + true_positives))
+                    accs.append(np.sum(y_predict == y[test]) / len(y[test]))
+                
+                return {
+                    "precisions": precisions,
+                    "recalls": recalls,
+                    "roc_aucs": aucs,
+                    "mean_auc": np.mean(aucs),
+                    "std_auc": np.std(aucs),
+                    "accuracies": accs,
+                    "acc_mean": np.mean(accs),
+                    "acc_std": np.std(accs),
+                    "tprs": tprs,
+                    "mean_tpr": np.mean(tprs, axis=0),
+                    "std_tpr": np.std(tprs),
+                    "x_domain": x_domain
+                }
+
+
+            except AttributeError:
+                print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
+        elif self.model_type == Model.PYTORCH: # pragma: no cover
+            # TODO: Implement pytorch cross validation
+            raise  Exception("Invalid model specified in marsvision.pipeline.Model")
+
+
 
     def cross_validate(self, 
              n_folds: int = 10,
@@ -191,10 +309,10 @@ class Model:
 
          # Train/Val/Test: 80/5/15
         train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [dataset_size * .8, dataset_size * .05, dataset_size * .15])
-        dataloaders = {
-            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4),
-            "eval": torch.utils.data.DataLoader(val_dataset, batch_size = 4),
-            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4)
+        DataUtilitys = {
+            "train": torch.utils.data.DataUtility(train_dataset, batch_size = 4),
+            "eval": torch.utils.data.DataUtility(val_dataset, batch_size = 4),
+            "test": torch.utils.data.DataUtility(test_dataset, batch_size = 4)
         }
 
         # Parallelize if GPU is available
@@ -214,7 +332,7 @@ class Model:
                 running_loss = 0.0
                 running_corrects = 0
 
-                for inputs, labels in dataloaders[phase]:
+                for inputs, labels in DataUtilitys[phase]:
                     inputs = inputs.to(device)
                     labels = labels.to(device)
 

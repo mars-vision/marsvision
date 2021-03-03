@@ -8,7 +8,7 @@ from marsvision.pipeline import FeatureExtractor
 from sklearn.preprocessing import LabelEncoder
 from typing import Optional
 
-class DataLoader:
+class DataUtility:
     def __init__(self, 
             in_path: Optional[str] = None,
             out_path: Optional[str] = None): 
@@ -120,6 +120,7 @@ class DataLoader:
         # Write features to CSV with path names.
         # Use the feature extractor to retrieve features from images.
         out_file = os.path.join(self.out_path, "output.csv")
+        self.df = self.df.drop("img_data", axis=1)
         self.df.to_csv(out_file, index=False)
 
     def run(self):
@@ -142,7 +143,7 @@ if __name__ == "__main__": # pragma: no cover
     parser.add_argument("--i", help="Input directory")
     parser.add_argument("--o", help="Output directory")
     args = parser.parse_args()
-    loader = DataLoader(args.i, args.o)
+    loader = DataUtility(args.i, args.o)
     loader.run()
 
 

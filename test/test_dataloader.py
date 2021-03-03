@@ -1,5 +1,5 @@
 from unittest import TestCase
-from marsvision.utilities import DataLoader
+from marsvision.utilities import DataUtility
 from marsvision.pipeline import FeatureExtractor
 import os
 import numpy as np
@@ -7,14 +7,14 @@ import cv2
 import pandas as pd
 from pandas._testing import assert_frame_equal
 
-class TestDataLoader(TestCase):
+class TestDataUtility(TestCase):
     def setUp(self):
         # Instantiate loader and set working directory
         self.current_dir = os.path.dirname(__file__)
         self.test_image_path = os.path.join(self.current_dir, "test_data")
         
         # For testing data loader with provided paths
-        self.loader = DataLoader(self.test_image_path, self.test_image_path)
+        self.loader = DataUtility(self.test_image_path, self.test_image_path)
         
         # Manually load a list of images and to test against the loader
         self.expected_loaded_images = []
