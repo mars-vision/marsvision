@@ -1,1 +1,1 @@
-from .DeepMarsDataLoader import DeepMarsDataLoader
+from .DeepMarsDataset import DeepMarsDataset

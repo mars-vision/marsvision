@@ -1,16 +1,16 @@
 from unittest import TestCase
-from marsvision.vision import DeepMarsDataLoader
+from marsvision.vision import DeepMarsDataset
 from torch import Tensor
 import torch
 import os
 import cv2
 
-class test_deep_mars_dataloader(TestCase):
+class test_deep_mars_dataset(TestCase):
 
     def test_deepmars_dataloader(self):
         # Test creating a pytorch dataset with the dataloader
         deep_mars_test_path = os.path.join(os.path.dirname(__file__), "deep_mars_test_data")
-        dataset = DeepMarsDataLoader(deep_mars_test_path)
+        dataset = DeepMarsDataset(deep_mars_test_path)
 
         
         # Read the first line in the labels file

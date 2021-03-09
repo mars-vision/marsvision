@@ -4,8 +4,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torch import Tensor
 
-class DeepMarsDataLoader(Dataset):
-    # Wrapper to work with deep mars dataset
+class DeepMarsDataset(Dataset):
     def __init__(self, root_dir: str):
         """
            Initialize transforms. Extract image labels from the dataset in root_dir. 
