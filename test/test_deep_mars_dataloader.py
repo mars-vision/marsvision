@@ -23,7 +23,7 @@ class test_deep_mars_dataloader(TestCase):
         # Pytorch normalize object attached to this dataloader
         normalize = dataset.normalize
 
-        # Apply transform to this tensor)
+        # Apply transform to this tensor
         test_img_path = os.path.join(deep_mars_test_path, "map-proj", first_filename)
         test_img = cv2.imread(test_img_path)
         

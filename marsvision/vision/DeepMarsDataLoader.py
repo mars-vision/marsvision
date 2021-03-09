@@ -5,17 +5,23 @@ from torchvision import transforms
 from torch import Tensor
 
 class DeepMarsDataLoader(Dataset):
-    """
-        Custom Pytorch DataLoader set up to work with the Deep Mars dataset.
-        
-    """
     # Wrapper to work with deep mars dataset
-    def __init__(self, root_dir):
+    def __init__(self, root_dir: str):
+        """
+           Initialize transforms. Extract image labels from the dataset in root_dir. 
+
+           ----
+
+           Parameters:
+
+           root_dir (str): Root directory of the Deep Mars dataset.
+        """
         
         # AlexNet expects images to be normalized this way.
         self.normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
         )
+        
         # Get image labels
         self.labels = {}
         with open(os.path.join(root_dir, "labels-map-proj.txt")) as f:
@@ -31,7 +37,12 @@ class DeepMarsDataLoader(Dataset):
         # to ensure that only labelled images are included
         self.image_names = list(set(image_names) & set(self.labels))
                                   
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
+        """
+            Returns an item in the dataset as a dictionary:
+                {'image': image, 'label': label}
+        """
+
         # Get a sample as: {'image': image, 'label': label}
         # Return an image with the dimensions 3 x W x H
         # Because PyTorch models expect these dimensions as inputs.
