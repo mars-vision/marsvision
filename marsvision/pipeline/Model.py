@@ -433,13 +433,13 @@ class Model:
                     phase, epoch_loss, epoch_acc, data_sizes[phase]))
 
                 # In the eval phase, get the accuracy for this epoch
-                    # If the model's current state is better than the best model seen so far,
-                    # replace the best model weights
-                    # with the previous best model weights on previous epochs
+                # If the model's current state is better than the best model seen so far,
+                # replace the best model weights
+                # with the previous best model weights on previous epochs
                 if phase == 'val' and epoch_acc > best_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(self.model.state_dict())
-                    # load best model weights
+                    
         print('Best Epoch Acc: {:.4f}'.format(best_acc))
         self.model.load_state_dict(best_model_wts)
 
