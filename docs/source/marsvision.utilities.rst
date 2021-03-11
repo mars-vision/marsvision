@@ -7,7 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   marsvision.utilities.DataLoader
+   marsvision.utilities.DataUtility
 
 Module contents
 ---------------
