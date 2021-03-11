@@ -7,35 +7,14 @@ import cv2
 
 class test_deep_mars_dataset(TestCase):
 
-    def test_deepmars_dataloader(self):
+    def test_deepmars_dataset(self):
         # Test creating a pytorch dataset with the dataloader
         deep_mars_test_path = os.path.join(os.path.dirname(__file__), "deep_mars_test_data")
         dataset = DeepMarsDataset(deep_mars_test_path)
 
+        # Ensure all of the images were loaded,
+        self.assertEqual(len(dataset), len(os.listdir(os.path.join(deep_mars_test_path, "map-proj"))))
         
-        # Read the first line in the labels file
-        with open(os.path.join(deep_mars_test_path, "labels-map-proj.txt")) as f:
-            line_items = f.readline().split()
-            first_filename, first_label = line_items[0], line_items[1]
+        # And that we have tensors
+        self.assertTrue(torch.is_tensor(dataset[0]["image"]))
 
-        first_label = int(first_label)
-
-        # Pytorch normalize object attached to this dataloader
-        normalize = dataset.normalize
-
-        # Apply transform to this tensor
-        test_img_path = os.path.join(deep_mars_test_path, "map-proj", first_filename)
-        test_img = cv2.imread(test_img_path)
-        
-        expected_tensor = normalize(
-            Tensor(
-                test_img
-            ).transpose(0, 2)
-        )
-
-        test_tensor = dataset[0]["image"]
-        self.assertTrue(torch.equal(expected_tensor, test_tensor))
-
-        test_label = dataset[0]["label"]
-        self.assertEqual(test_label, first_label)
-        
