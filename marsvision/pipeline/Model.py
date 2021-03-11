@@ -115,7 +115,7 @@ class Model:
             print("Training images need to be set before feature extraction. Call set_training_data to initialize training data.")
 
     
-    def cross_validate_plot(self, title: str = "Binary Cross Validation Results"):
+    def cross_validate_plot(self, title: str = "Binary Cross Validation Results", n_folds: int = 2):
         """
             Run cross validation on a binary classification problem,
             and make a matplotlib plot of the results.
@@ -125,11 +125,12 @@ class Model:
             Parameters
 
             Title(str): Title of the figure.
+            n_folds(int): Number of folds.
         """
 
         fig, ax = plt.subplots()
 
-        cv_results = self.cross_validate_binary(5, ax)
+        cv_results = self.cross_validate_binary_metrics(n_folds, ax)
 
         fig.set_size_inches(18.5, 10.5)
             
@@ -154,81 +155,78 @@ class Model:
         return cv_results
 
 
-    def cross_validate_binary(self, 
-             n_folds: int = 10,
+    def cross_validate_binary_metrics(self, 
+             n_folds: int = 5,
              ax = None):
         """
-            Run cross validation on a binary classification problem and return the results as a dictionary.
+            Run cross validation on a binary classification problem on the basic pipeline, and return the results as a dictionary.
 
-            This method assumes that there are only two labels in the training labels member of this class.
+            This is mainly a helper function for the cross_validate_plot function, which cross validates and plotes ROC curves for each fold.
+
+            This method returns the domain over which the plot is constructed as well as the tpr and fpr values, alongside standard binary classification measures for each fold: precision, recall, accuracy, auc.
+
+            This method assumes that there are only two labels in the training label member of this class.
 
             --------
             
             Parameters:
 
             n_dolfds (int): Number of folds.
+            ax: Matplotlib axis on which to show the plot.
 
         """
 
-        # Set stratified k folds using n_folds parameters
+        # Set stratified k folds using n_folds 
         stratified_kfold = StratifiedKFold(n_folds)
+        try: 
+            self.set_extracted_features()
+            x = np.array(self.extracted_features)
+            y = np.array(self.training_labels)
+        except AttributeError:
+            print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
+            
+        precisions = []
+        aucs = []
+        accs = []
+        recalls = []
+        visualizations = []
+        tprs = []
+        x_domain = np.linspace(0, 1, 100)
 
-        # If no extracted features exist, set them for the sklearn model
-        if self.model_type == Model.SKLEARN:   
-            try: 
-                self.set_extracted_features()
-                x = np.array(self.extracted_features)
-                y = np.array(self.training_labels)
-                precisions = []
-                aucs = []
-                accs = []
-                recalls = []
-                visualizations = []
-                tprs = []
-                x_domain = np.linspace(0, 1, 100)
+        for i, (train, test) in enumerate(stratified_kfold.split(self.extracted_features, self.training_labels)):
+            self.model.fit(x[train], y[train])
+            viz = plot_roc_curve(self.model, x[test], y[test])
+            plt.close()
+            visualizations.append(plot_roc_curve(self.model, x[test], y[test], ax = ax))
+            interp_tpr = np.interp(x_domain, viz.fpr, viz.tpr)
+            interp_tpr[0] = 0.0
+            tprs.append(interp_tpr)
+            aucs.append(viz.roc_auc)
 
-                for i, (train, test) in enumerate(stratified_kfold.split(self.extracted_features, self.training_labels)):
-                    self.model.fit(x[train], y[train])
-                    viz = plot_roc_curve(self.model, x[test], y[test])
-                    plt.close()
-                    visualizations.append(plot_roc_curve(self.model, x[test], y[test], ax = ax))
-                    interp_tpr = np.interp(x_domain, viz.fpr, viz.tpr)
-                    interp_tpr[0] = 0.0
-                    tprs.append(interp_tpr)
-                    aucs.append(viz.roc_auc)
+            y_predict = np.array(self.model.predict(x[test]))
+            y_test = np.array(y[test])
+            false_negatives = np.sum(y_test[y_predict == 0] != y_predict[y_predict == 0])
+            true_positives = np.sum(y_test[y_predict == 1] == y_predict[y_predict == 1])
+            false_positives = np.sum(y_test[y_predict == 1] != y_predict[y_predict == 1])
 
-                    y_predict = np.array(self.model.predict(x[test]))
-                    y_test = np.array(y[test])
-                    false_negatives = np.sum(y_test[y_predict == 0] != y_predict[y_predict == 0])
-                    true_positives = np.sum(y_test[y_predict == 1] == y_predict[y_predict == 1])
-                    false_positives = np.sum(y_test[y_predict == 1] != y_predict[y_predict == 1])
-
-                    precisions.append(true_positives / (true_positives + false_positives))
-                    recalls.append(true_positives / (false_negatives + true_positives))
-                    accs.append(np.sum(y_predict == y[test]) / len(y[test]))
-                
-                return {
-                    "precisions": precisions,
-                    "recalls": recalls,
-                    "roc_aucs": aucs,
-                    "mean_auc": np.mean(aucs),
-                    "std_auc": np.std(aucs),
-                    "accuracies": accs,
-                    "acc_mean": np.mean(accs),
-                    "acc_std": np.std(accs),
-                    "tprs": tprs,
-                    "mean_tpr": np.mean(tprs, axis=0),
-                    "std_tpr": np.std(tprs),
-                    "x_domain": x_domain
-                }
-
-
-            except AttributeError:
-                print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
-        elif self.model_type == Model.PYTORCH: # pragma: no cover
-            # TODO: Implement pytorch cross validation
-            raise  Exception("Invalid model specified in marsvision.pipeline.Model")
-
+            precisions.append(true_positives / (true_positives + false_positives))
+            recalls.append(true_positives / (false_negatives + true_positives))
+            accs.append(np.sum(y_predict == y[test]) / len(y[test]))
+                    
+        return {
+            "precisions": precisions,
+            "recalls": recalls,
+            "roc_aucs": aucs,
+            "mean_auc": np.mean(aucs),
+            "std_auc": np.std(aucs),
+            "accuracies": accs,
+            "acc_mean": np.mean(accs),
+            "acc_std": np.std(accs),
+            "tprs": tprs,
+            "mean_tpr": np.mean(tprs, axis=0),
+            "std_tpr": np.std(tprs),
+            "x_domain": x_domain
+        }
 
 
     def cross_validate(self, 
@@ -262,14 +260,13 @@ class Model:
         if self.model_type == Model.SKLEARN:   
             self.set_extracted_features()
             try: 
-                cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
+                self.cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
             except AttributeError:
                 print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
         elif self.model_type == Model.PYTORCH: # pragma: no cover
             # TODO: Implement pytorch cross validation
             raise  Exception("Invalid model specified in marsvision.pipeline.Model")
 
-        return cv_results
 
 
     def write_cv_results(self, output_path: str = "cv_test_results.txt"):

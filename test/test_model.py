@@ -62,6 +62,14 @@ class TestModel(TestCase):
         np.testing.assert_equal(lr_before.intercept_, lr_after.intercept_)
         np.testing.assert_equal(lr_before.n_iter_, lr_after.n_iter_)
 
+    def test_cross_validate_plot(self):
+        # Simply run the binary cross validation routine to validate it in this test
+        self.model_sklearn.cross_validate_plot(2)
+
+    
+
+    
+
     """
     Come back to this when we come back to pytorch
     def test_save_load_pytorch(self):
