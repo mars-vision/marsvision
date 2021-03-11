@@ -230,7 +230,7 @@ class Model:
              scoring: list = ["accuracy", "precision", "recall", "roc_auc"], 
             **kwargs):
         """
-            Run cross validation on the model with its training data and labels. Store results in a cv_results member.
+            Run cross validation on the model with its training data and labels. Return the results.
 
             --------
             
@@ -256,12 +256,14 @@ class Model:
         if self.model_type == Model.SKLEARN:   
             self.set_extracted_features()
             try: 
-                self.cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
+                cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
             except AttributeError:
                 print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
         elif self.model_type == Model.PYTORCH: # pragma: no cover
             # TODO: Implement pytorch cross validation
             raise  Exception("Invalid model specified in marsvision.pipeline.Model")
+
+        return cv_results
 
 
     def write_cv_results(self, output_path: str = "cv_test_results.txt"):
