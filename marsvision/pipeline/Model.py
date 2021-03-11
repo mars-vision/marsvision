@@ -4,11 +4,17 @@ import os
 import torch
 import pickle
 from marsvision.pipeline.FeatureExtractor import *
+from marsvision.vision import DeepMarsDataset
 from sklearn.model_selection import cross_validate, StratifiedKFold
 from sklearn.metrics import plot_roc_curve
 from typing import List
 import torch
 import torchvision
+from torch import Tensor
+from torch import nn
+from torch import optim
+import copy
+from torch.optim import lr_scheduler
 import matplotlib.pyplot as plt
 
 class Model:
@@ -283,16 +289,26 @@ class Model:
             output_file.write(score + "(mean): " + str(cv_score_mean) + "\n")
 
         
-    def train_model(self): # pragma: no cover
+    def train_model(self, root_dir: str = None):
         """
-            Trains a classifier using this object's configuration, as specified in the construct. 
+            Trains a classifier using this object's configuration, as specified in the constructor. 
             
             Either an SKLearn or Pytorch model will be trained on this object's data. The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module. The Pytorch model will be trained by running a CNN on the image data.
+        
+            -----
+            
+            Parameters:
+
+            root_dir (str): Root directory of the Deep Mars dataset.
         """
 
-        # Todo: Implement pytorch training
         if self.model_type == Model.PYTORCH:
-            raise Exception("Invalid model specified in marsvision.pipeline.Model")
+            # TODO: implement these as parameters
+            # Should also add these to the config file.
+            criterion = nn.CrossEntropyLoss()
+            optimizer = optim.SGD(self.model.parameters(), lr=0.0001, momentum=0.9)
+            scheduler = lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
+            self.train_model_pytorchcnn(root_dir, criterion, optimizer, scheduler)
         elif self.model_type == Model.SKLEARN:
             # Extract features from every image in the batch,
             # then fit the sklearn model to these features.
@@ -303,48 +319,96 @@ class Model:
             raise Exception("No model specified in marsvision.pipeline.Model")
 
 
-    def train_model_pytorchcnn(self, model, criterion, optimizer, scheduler, num_epochs = 25):
+    def train_model_pytorchcnn(self, root_dir, criterion, optimizer, scheduler, num_epochs = 25):
 
-        # Set up simple dataset with labels and image data
-        dataset = TensorDataset(Tensor(self.training_images), Tensor(self.training_labels))
+        dataset = DeepMarsDataset(root_dir)
         dataset_size  = len(dataset)
 
          # Train/Val/Test: 80/5/15
-        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [dataset_size * .8, dataset_size * .05, dataset_size * .15])
-        DataUtilitys = {
-            "train": torch.utils.data.DataUtility(train_dataset, batch_size = 4),
-            "eval": torch.utils.data.DataUtility(val_dataset, batch_size = 4),
-            "test": torch.utils.data.DataUtility(test_dataset, batch_size = 4)
+        num_train_samples = int(dataset_size * .8)
+        num_val_samples = int(dataset_size * .05)
+        num_test_samples = dataset_size - num_train_samples - num_val_samples
+        data_sizes = {
+            "train": num_train_samples,
+            "val": num_val_samples,
+            "test": num_test_samples
+        }
+        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, 
+            [
+                data_sizes["train"],
+                data_sizes["val"],
+                data_sizes["test"]
+            ]
+        )
+
+        DataLoaders = {
+            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4),
+            "val": torch.utils.data.DataLoader(val_dataset, batch_size = 4),
+            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4)
         }
 
         # Parallelize if GPU is available
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+        best_acc = 0.0
+
         for epoch in range(num_epochs):
-            print("Epoch: {}{}".format(epoch, num_epochs - 1))
-            print("-") * 10
+            print("Epoch: {}/{}".format(epoch, num_epochs - 1))
+            print("-" * 10)
             
             # Train/Val/Test: 80/5/15
-            for phase in ["train", "eval"]:
+            for phase in ["train", "val"]:
                 if phase == "train":
-                    model.train()
+                    self.model.train()
                 else:
-                    model.eval()
+                    self.model.eval()
                 
                 running_loss = 0.0
                 running_corrects = 0
 
-                for inputs, labels in DataUtilitys[phase]:
-                    inputs = inputs.to(device)
-                    labels = labels.to(device)
+                # Iterate and train
+                for sample in DataLoaders[phase]:
+                    inputs = Tensor(sample["image"]).to(device)
+                    labels = sample["label"]
 
-                    # Zero the gradients
+                    # Zero the gradients before the forward pass
                     optimizer.zero_grad()
 
-                    # Forward pass
+                    # Forward pass if in train phase
                     with torch.set_grad_enabled(phase == "train"):
-                        outputs = model(inputs)
+                        outputs = self.model(inputs)
+                        _, preds = torch.max(outputs, 1)
+                        loss = criterion(outputs, labels)
 
+                        if phase == "train":
+                            # Gradient descent / adjust weights
+                            loss.backward()
+                            optimizer.step()
+                            
+
+                    running_loss += loss.item() * inputs.size(0)
+                    running_corrects += torch.sum(preds == labels)
+                    print("Running loss: {} | Running corrects: {}".format(
+                    running_loss, running_corrects))
+
+                    if phase == "train":
+                        scheduler.step()
+
+            epoch_loss = running_loss / data_sizes[phase]
+            epoch_acc = running_corrects.double() / data_sizes[phase]
+
+            print('{} Loss: {:.4f} Acc: {:.4f} | Images trained on: {}'.format(
+                phase, epoch_loss, epoch_acc, data_sizes[phase]))
+
+            # In the eval phase, get the accuracy for this epoch
+                # If the mode's current state is better than the best model seen so far,
+                # replace the best model weights
+                # with the previous best model weights on previous epochs
+            if phase == 'val' and epoch_acc > best_acc:
+                best_acc = epoch_acc
+                best_model_wts = copy.deepcopy(self.model.state_dict())
+                # load best model weights
+        self.model.load_state_dict(best_model_wts)
 
     def save_model(self, out_path: str = "model.p"):
         """
