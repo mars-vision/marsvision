@@ -134,6 +134,9 @@
 <li class="toctree-l1"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a></li>
 </ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="marsvision.config_path.html">marsvision.config_path module</a></li>
+</ul>
 
             
           
@@ -236,13 +239,36 @@ model_type (str): String identifier for the type of model. Determines how the mo
 <dl class="py method">
 <dt id="marsvision.pipeline.Model.Model.cross_validate">
 <code class="sig-name descname">cross_validate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_folds</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">scoring</span><span class="p">:</span> <span class="n">list</span> <span class="o">=</span> <span class="default_value">['accuracy', 'precision', 'recall', 'roc_auc']</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.cross_validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run cross validation on the model with its training data and labels. Store results in a cv_results member.</p>
+<dd><p>Run cross validation on the model with its training data and labels. Return the results.</p>
 <p>Parameters:</p>
 <p>scoring (list): List of sklearn cross validation scoring identifiers. 
 Default: [“accuracy”, “precision”, “recall”, “roc_auc”]. Assumes binary classification.
 Valid IDs are SKLearn classification identifiers.
 <a class="reference external" href="https://scikit-learn.org/stable/modules/model_evaluation.html">https://scikit-learn.org/stable/modules/model_evaluation.html</a>
 n_folds (int): Number of cross validation folds. Default 10.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.cross_validate_binary_metrics">
+<code class="sig-name descname">cross_validate_binary_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_folds</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.cross_validate_binary_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run cross validation on a binary classification problem on the basic pipeline, and return the results as a dictionary.</p>
+<p>This is mainly a helper function for the cross_validate_plot function, which cross validates and plotes ROC curves for each fold.</p>
+<p>This method returns the domain over which the plot is constructed as well as the tpr and fpr values, alongside standard binary classification measures for each fold: precision, recall, accuracy, auc.</p>
+<p>This method assumes that there are only two labels in the training label member of this class.</p>
+<p>Parameters:</p>
+<p>n_dolfds (int): Number of folds.
+ax: Matplotlib axis on which to show the plot.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.cross_validate_plot">
+<code class="sig-name descname">cross_validate_plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">title</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'Binary Cross Validation Results'</span></em>, <em class="sig-param"><span class="n">n_folds</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.cross_validate_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run cross validation on a binary classification problem,
+and make a matplotlib plot of the results.</p>
+<p>—</p>
+<p>Parameters</p>
+<p>Title(str): Title of the figure.
+n_folds(int): Number of folds.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -259,6 +285,7 @@ model_type(str): The model type. Either “sklearn” or “pytorch”.</p>
 <code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_list</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run inference using self.model on a list of images using the currently instantiated model.</p>
 <p>This model can either be an sklearn model or a pytorch model.</p>
+<p>Returns a list of inferences.</p>
 <p>—</p>
 <dl class="simple">
 <dt>Parameters:</dt><dd><p>image_list (List[np.ndarray]): Batch of images to run inference on with this model.</p>
@@ -293,9 +320,20 @@ training_labels (self): Labels associated with training images. Should be a list
 
 <dl class="py method">
 <dt id="marsvision.pipeline.Model.Model.train_model">
-<code class="sig-name descname">train_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Trains a classifier using this object’s configuration, as specified in the construct.</p>
+<code class="sig-name descname">train_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains a classifier using this object’s configuration, as specified in the constructor.</p>
 <p>Either an SKLearn or Pytorch model will be trained on this object’s data. The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module. The Pytorch model will be trained by running a CNN on the image data.</p>
+<p>Parameters:</p>
+<p>root_dir (str): Root directory of the Deep Mars dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="marsvision.pipeline.Model.Model.train_model_pytorchcnn">
+<code class="sig-name descname">train_model_pytorchcnn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model_pytorchcnn" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an internal helper function which handles the training of a pytorch CNN model.</p>
+<p>The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the package’s config file.</p>
+<p>Parameters:</p>
+<p>root_dir (str): Path to the Deep Mars dataset.</p>
 </dd></dl>
 
 <dl class="py method">

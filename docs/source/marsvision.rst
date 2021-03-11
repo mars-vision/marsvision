@@ -11,6 +11,14 @@ Subpackages
    marsvision.utilities
    marsvision.vision
 
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   marsvision.config_path
+
 Module contents
 ---------------
 

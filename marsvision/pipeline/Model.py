@@ -288,7 +288,7 @@ class Model:
             output_file.write(score + "(mean): " + str(cv_score_mean) + "\n")
 
         
-    def train_model(self, root_dir: str = None):
+    def train_model(self, root_dir: str):
         """
             Trains a classifier using this object's configuration, as specified in the constructor. 
             
@@ -367,7 +367,8 @@ class Model:
                 data_sizes["train"],
                 data_sizes["val"],
                 data_sizes["test"]
-            ]
+            ],
+            generator = torch.Generator().manual_seed(42)
         )
 
         # Finally, instantiate the dataloaders using the split sets.
@@ -416,9 +417,9 @@ class Model:
                             loss.backward()
                             optimizer.step()
                             
-
+                    # Note -- what's happening in this loss calculation?
                     running_loss += loss.item() * inputs.size(0)
-                    running_corrects += torch.sum(preds == labels)
+                    running_corrects += int(torch.sum(preds == labels))
                     print("Running loss: {} | Running corrects: {}".format(
                     running_loss, running_corrects))
 
@@ -426,7 +427,7 @@ class Model:
                         scheduler.step()
 
                 epoch_loss = running_loss / data_sizes[phase]
-                epoch_acc = running_corrects.double() / data_sizes[phase]
+                epoch_acc = running_corrects / data_sizes[phase]
                 print(data_sizes[phase])
                 print('{} loss: {:.4f} Acc: {:.4f} | Images trained on: {}'.format(
                     phase, epoch_loss, epoch_acc, data_sizes[phase]))

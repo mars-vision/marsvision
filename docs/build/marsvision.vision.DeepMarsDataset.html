@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>marsvision &mdash; marsvision 0.1.0 documentation</title>
+  <title>marsvision.vision.DeepMarsDataset module &mdash; marsvision 0.1.0 documentation</title>
   
 
   
@@ -27,7 +27,9 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="marsvision.config_path module" href="marsvision.config_path.html" />
+    <link rel="prev" title="marsvision.vision package" href="marsvision.vision.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -127,10 +129,10 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.config_path.html">marsvision.config_path module</a></li>
@@ -176,13 +178,15 @@
       </li>
 
         
-      <li>marsvision</li>
+          <li><a href="marsvision.vision.html">marsvision.vision package</a> &gt;</li>
+        
+      <li>marsvision.vision.DeepMarsDataset module</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/modules.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="_sources/marsvision.vision.DeepMarsDataset.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -205,38 +209,22 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" class="pytorch-article">
               
-  <div class="section" id="marsvision">
-<h1>marsvision<a class="headerlink" href="#marsvision" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="marsvision.html">marsvision package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="marsvision.pipeline.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="marsvision.pipeline.html#module-marsvision.pipeline">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="marsvision.utilities.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="marsvision.utilities.html#module-marsvision.utilities">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="marsvision.vision.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="marsvision.vision.html#module-marsvision.vision">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="marsvision.config_path.html">marsvision.config_path module</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="marsvision.html#module-marsvision">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</div>
+  <div class="section" id="module-marsvision.vision.DeepMarsDataset">
+<span id="marsvision-vision-deepmarsdataset-module"></span><h1>marsvision.vision.DeepMarsDataset module<a class="headerlink" href="#module-marsvision.vision.DeepMarsDataset" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="marsvision.vision.DeepMarsDataset.DeepMarsDataset">
+<em class="property">class </em><code class="sig-prename descclassname">marsvision.vision.DeepMarsDataset.</code><code class="sig-name descname">DeepMarsDataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.vision.DeepMarsDataset.DeepMarsDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code></p>
+<dl class="py method">
+<dt id="marsvision.vision.DeepMarsDataset.DeepMarsDataset.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.vision.DeepMarsDataset.DeepMarsDataset.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize transforms. Extract image labels from the dataset in root_dir.</p>
+<p>Parameters:</p>
+<p>root_dir (str): Root directory of the Deep Mars dataset.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -265,7 +253,7 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">marsvision</a></li>
+<li><a class="reference internal" href="#">marsvision.vision.DeepMarsDataset module</a></li>
 </ul>
 
             </div>
