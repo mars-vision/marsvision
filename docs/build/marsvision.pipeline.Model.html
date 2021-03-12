@@ -230,10 +230,12 @@
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">model_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'pytorch'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Model class that serves as an abstract wrapper for either an sklearn or pytorch model.</p>
 <p>Parameters:</p>
-<p>training_images (numpy.ndarray): Batch of images to train on 
+<p>model: Either an sklearn machine learning model, or a pytorch neural network. Can be a path to a file or a model object.</p>
+<p>model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.</p>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs:
+training_images (numpy.ndarray): Batch of images to train on 
 training_labels: Class labels for the training images
-model: Either an sklearn machine learning model, or a pytorch neural network. Can be a path to a file or a model object.
-model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.</p>
+dataset_root_directory: The root directory of the Deep Mars dataset to train on.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -320,7 +322,7 @@ training_labels (self): Labels associated with training images. Should be a list
 
 <dl class="py method">
 <dt id="marsvision.pipeline.Model.Model.train_model">
-<code class="sig-name descname">train_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">train_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Trains a classifier using this object’s configuration, as specified in the constructor.</p>
 <p>Either an SKLearn or Pytorch model will be trained on this object’s data. The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module. The Pytorch model will be trained by running a CNN on the image data.</p>
 <p>Parameters:</p>
@@ -329,7 +331,7 @@ training_labels (self): Labels associated with training images. Should be a list
 
 <dl class="py method">
 <dt id="marsvision.pipeline.Model.Model.train_model_pytorchcnn">
-<code class="sig-name descname">train_model_pytorchcnn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model_pytorchcnn" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">train_model_pytorchcnn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.pipeline.Model.Model.train_model_pytorchcnn" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is an internal helper function which handles the training of a pytorch CNN model.</p>
 <p>The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the package’s config file.</p>
 <p>Parameters:</p>

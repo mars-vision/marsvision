@@ -35,11 +35,20 @@ class Model:
             
             Parameters:
 
+            model: Either an sklearn machine learning model, or a pytorch neural network. Can be a path to a file or a model object.
+
+            model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.
+
+
+            **kwargs:
             training_images (numpy.ndarray): Batch of images to train on 
             training_labels: Class labels for the training images
-            model: Either an sklearn machine learning model, or a pytorch neural network. Can be a path to a file or a model object.
-            model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.
+            dataset_root_directory: The root directory of the Deep Mars dataset to train on.
         """
+
+        # Open config file
+        with open(CONFIG_PATH) as yaml_cfg:
+            self.config = yaml.load(yaml_cfg)
 
         if "training_images" in kwargs:
             self.training_images = kwargs["training_images"]
@@ -47,7 +56,14 @@ class Model:
         if "training_labels" in kwargs:
             self.training_labels = kwargs["training_labels"]
 
+        if "dataset_root_directory" in kwargs:
+            self.dataset_root_directory = kwargs["dataset_root_directory"]
+
         self.model_type = model_type
+
+        if self.model_type == Model.PYTORCH:
+            assert(self.dataset_root_directory is not None), "No dataset directory specified. You must specify a dataset root directory when using a Pytorch model."
+
         if type(model) == str:
             self.load_model(model, self.model_type)
         else:
@@ -288,7 +304,7 @@ class Model:
             output_file.write(score + "(mean): " + str(cv_score_mean) + "\n")
 
         
-    def train_model(self, root_dir: str):
+    def train_model(self):
         """
             Trains a classifier using this object's configuration, as specified in the constructor. 
             
@@ -301,8 +317,8 @@ class Model:
             root_dir (str): Root directory of the Deep Mars dataset.
         """
 
-        if self.model_type == Model.PYTORCH:
-            self.train_model_pytorchcnn(root_dir)
+        if self.model_type == Model.PYTORCH:   
+            self.train_model_pytorchcnn()
         elif self.model_type == Model.SKLEARN:
             # Extract features from every image in the batch,
             # then fit the sklearn model to these features.
@@ -313,7 +329,7 @@ class Model:
             raise Exception("No model specified in marsvision.pipeline.Model")
 
 
-    def train_model_pytorchcnn(self, root_dir: str):
+    def train_model_pytorchcnn(self):
         """
             This is an internal helper function which handles the training of a pytorch CNN model.
  
@@ -330,9 +346,8 @@ class Model:
         # Extracting these to named variables because
         # We can later add conditionals that use kwargs with the same keys,
         # to make these function calls a bit more customizable to the user.
-        with open(CONFIG_PATH) as yaml_cfg:
-            config = yaml.load(yaml_cfg)
-        pytorch_parameters = config["pytorch_cnn_parameters"]
+        
+        pytorch_parameters = self.config["pytorch_cnn_parameters"]
         num_epochs = pytorch_parameters["num_epochs"]
         learning_rate = pytorch_parameters["gradient_descent_learning_rate"]
         momentum = pytorch_parameters["gradient_descent_momentum"]
@@ -340,6 +355,7 @@ class Model:
         gamma = pytorch_parameters["scheduler_gamma"]
         train_proportion = pytorch_parameters["train_proportion"]
         test_proportion = pytorch_parameters["test_proportion"]
+        root_dir = self.dataset_root_directory
 
         # Initialize using values from the config file.
         optimizer = optim.SGD(self.model.parameters(), lr=learning_rate, momentum=momentum)
