@@ -21,7 +21,7 @@ class SlidingWindow:
             The results of the classification, as well as window and image information,
             is stored in a SQLite database.
 
-            ------
+            ------F
 
             Parameters:
 
