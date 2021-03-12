@@ -10,6 +10,7 @@ from sklearn.metrics import plot_roc_curve
 from typing import List
 import torch
 import torchvision
+from torchvision import transforms
 from torch import Tensor
 from torch import nn
 from torch import optim
@@ -86,6 +87,7 @@ class Model:
                 image_list (List[np.ndarray]): Batch of images to run inference on with this model.
         """
 
+        image_list = np.array(image_list)
         # Handle the case of a single image by casting it as a list with itself in it
         if len(image_list.shape) == 3:
             image_list = [image_list]
@@ -95,14 +97,19 @@ class Model:
             # Extract features,
             # Use self.model for inference on each
             # Return a list of inferences
+
+            image_list = np.array(image_list)
             image_feature_list = []
             for image in image_list:
                 image_feature_list.append(FeatureExtractor.extract_features(image))
             inference_list = self.model.predict(image_feature_list)
             return list(map(int, inference_list))
+        elif self.model_type == Model.PYTORCH:
 
-        elif self.model_type == Model.PYTORCH: # pragma: no cover
-            # TODO: Implement pytorch for model class
+            ## TODO: Inference on this batch of images
+
+            return self.model(input_tensor)
+        else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
 
     def set_training_data(self, training_images: np.ndarray, training_labels: List[str]):
@@ -461,7 +468,7 @@ class Model:
 
     def save_model(self, out_path: str = "model.p"):
         """
-            Saves a pickle file containing this object's model.
+            Saves a pickle file containing this object's model. The model can either be a Pytorch or SKlearn model.
 
             -------
 
@@ -472,21 +479,32 @@ class Model:
         if self.model_type == Model.SKLEARN:
             with open(out_path, "wb") as out_file:
                 pickle.dump(self.model, out_file)
-                
-        if self.model_type == Model.PYTORCH: # pragma: no cover
+        elif self.model_type == Model.PYTORCH: # pragma: no cover
             torch.save(self.model, out_path)
+        else:
+            raise Exception("No model type selected in this Model object.")
 
 
     def load_model(self, input_path: str, model_type: str):
         """
-            Loads a model into this object from a pickle file, into the self.model member.
+            Loads a model into this object from a file, into the self.model member. The model can either be a Pytorch model saved via torch.save() or an SKlearn model.
 
             -------
 
             Parameters:
+
             out_path(str): The input location of the file to be read.
             model_type(str): The model type. Either "sklearn" or "pytorch".
         """
-        with open(input_path, 'rb') as in_file:
-            self.model = pickle.load(in_file)
+
         self.model_type = model_type
+
+        if self.model_type == Model.SKLEARN:
+            with open(input_path, 'rb') as in_file:
+                self.model = pickle.load(in_file)
+        elif self.model_type == Model.PYTORCH:
+            self.model = torch.load(input_path)
+        else:
+            raise Exception("Model_type does not match a valid class. Specify 'pytorch' or 'sklearn'.")
+
+        

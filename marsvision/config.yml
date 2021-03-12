@@ -1,3 +1,10 @@
+dataset:
+  dataset_root_directory: null
+
+training_options:
+  # Set this to 'pytorch' or 'sklearn'
+  train_mode: pytorch
+
 pytorch_cnn_parameters:
   num_epochs: 5
   gradient_descent_learning_rate: 0.0001
@@ -6,3 +13,4 @@ pytorch_cnn_parameters:
   scheduler_step_size: 2
   train_proportion: 0.8
   test_proportion: 0.05
+  num_output_classes: 7

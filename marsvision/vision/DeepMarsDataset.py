@@ -3,6 +3,7 @@ import cv2
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torch import Tensor
+from torchvision
 
 class DeepMarsDataset(Dataset):
     def __init__(self, root_dir: str):
@@ -18,6 +19,8 @@ class DeepMarsDataset(Dataset):
         
         # All pre-trained models expect input images normalized in this way.
         # Source: https://pytorch.org/vision/stable/models.html
+
+        # TODO: Crop images to 256x256 -- may need to read images with PIL instead in here
         self.normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
         )
