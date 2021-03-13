@@ -97,7 +97,6 @@ class Model:
             # Extract features,
             # Use self.model for inference on each
             # Return a list of inferences
-
             image_list = np.array(image_list)
             image_feature_list = []
             for image in image_list:
@@ -105,9 +104,11 @@ class Model:
             inference_list = self.model.predict(image_feature_list)
             return list(map(int, inference_list))
         elif self.model_type == Model.PYTORCH:
-
-            ## TODO: Inference on this batch of images
-
+            # Transpose the np array into the expected dimensions:
+            # (samples, channels, height, width)
+            # May want to crop/transform images here to match expected image format
+            image_list = np.transpose(image_list, (0, 3, 2, 1))
+            input_tensor = torch.FloatTensor(image_list)
             return self.model(input_tensor)
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")

@@ -3,7 +3,6 @@ import cv2
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torch import Tensor
-from torchvision
 
 class DeepMarsDataset(Dataset):
     def __init__(self, root_dir: str):
