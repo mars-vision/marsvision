@@ -109,7 +109,9 @@ class Model:
             # May want to crop/transform images here to match expected image format
             image_list = np.transpose(image_list, (0, 3, 2, 1))
             input_tensor = torch.FloatTensor(image_list)
-            return self.model(input_tensor)
+
+            # Output is a list of confidence scores per class; output indices of the maximum value per sample.
+            return self.model(input_tensor).argmax(dim=1)
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
 
