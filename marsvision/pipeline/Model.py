@@ -379,8 +379,12 @@ class Model:
         test_proportion = pytorch_parameters["test_proportion"]
         root_dir = self.dataset_root_directory
 
+         # Parallelize if a valid GPU is available
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        model = self.model.to(device)
+
         # Initialize using values from the config file.
-        optimizer = optim.SGD(self.model.parameters(), lr=learning_rate, momentum=momentum)
+        optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
         # Decay by a factor of gamma every step_size epochs
         scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
         criterion = nn.CrossEntropyLoss() 
@@ -411,17 +415,15 @@ class Model:
 
         # Finally, instantiate the dataloaders using the split sets.
         DataLoaders = {
-            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4),
-            "val": torch.utils.data.DataLoader(val_dataset, batch_size = 4),
-            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4)
+            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4, num_workers = 4),
+            "val": torch.utils.data.DataLoader(val_dataset, batch_size = 4, num_workers = 4),
+            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4, num_workers = 4)
         }
 
-        # Parallelize if a valid GPU is available
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        
+       
         # Training starts here.
         best_acc = 0.0
-        best_model_wts = copy.deepcopy(self.model.state_dict())
+        best_model_wts = copy.deepcopy(model.state_dict())
         for epoch in range(num_epochs):
             print("Epoch: {}/{}".format(epoch, num_epochs - 1))
             print("-" * 10)
@@ -429,24 +431,24 @@ class Model:
             # Train/Val/Test: 80/5/15
             for phase in ["train", "val"]:
                 if phase == "train":
-                    self.model.train()
+                    model.train()
                 else:
-                    self.model.eval()
+                    model.eval()
                 
                 running_loss = 0.0
                 running_corrects = 0
 
-                # Get samples in batches (specified in the DataLoader objects).
+                # Get samples in batches
                 for sample in DataLoaders[phase]:
-                    inputs = Tensor(sample["image"]).to(device)
-                    labels = sample["label"]
+                    inputs = sample["image"].to(device)
+                    labels = sample["label"].to(device)
 
                     # Zero the gradients before the forward pass
                     optimizer.zero_grad()
 
                     # Forward pass if in train phase
                     with torch.set_grad_enabled(phase == "train"):
-                        outputs = self.model(inputs)
+                        outputs = model(inputs)
                         _, preds = torch.max(outputs, 1)
                         loss = criterion(outputs, labels)
 
@@ -458,11 +460,9 @@ class Model:
                     # Note -- what's happening in this loss calculation?
                     running_loss += loss.item() * inputs.size(0)
                     running_corrects += int(torch.sum(preds == labels))
-                    print("Running loss: {} | Running corrects: {}".format(
-                    running_loss, running_corrects))
 
-                    if phase == "train":
-                        scheduler.step()
+                if phase == "train":
+                    scheduler.step()
 
                 epoch_loss = running_loss / data_sizes[phase]
                 epoch_acc = running_corrects / data_sizes[phase]
@@ -476,7 +476,7 @@ class Model:
                 # with the previous best model weights on previous epochs
                 if phase == 'val' and epoch_acc > best_acc:
                     best_acc = epoch_acc
-                    best_model_wts = copy.deepcopy(self.model.state_dict())
+                    best_model_wts = copy.deepcopy(model.state_dict())
                     
         print('Best Epoch Acc: {:.4f}'.format(best_acc))
         self.model.load_state_dict(best_model_wts)

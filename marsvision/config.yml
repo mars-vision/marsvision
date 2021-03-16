@@ -7,10 +7,10 @@ training_options:
 
 pytorch_cnn_parameters:
   num_epochs: 5
-  gradient_descent_learning_rate: 0.0001
+  gradient_descent_learning_rate: 0.1
   gradient_descent_momentum: 0.9
   scheduler_gamma: 0.1
-  scheduler_step_size: 2
+  scheduler_step_size: 7
   train_proportion: 0.8
   test_proportion: 0.05
   num_output_classes: 7

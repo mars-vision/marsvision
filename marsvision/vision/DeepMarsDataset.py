@@ -1,5 +1,5 @@
 import os
-import cv2
+from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torch import Tensor
@@ -27,9 +27,16 @@ class DeepMarsDataset(Dataset):
                 self.labels[key] = int(value)
 
 
-        self.normalize = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
+        # Normalize images into [0, 1] with the expected mean and stds.
+        self.transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(), # normalize to [0, 1]
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
+        ])
                 
         # Get image filenames
         self.image_dir = os.path.join(root_dir, "map-proj")
@@ -41,28 +48,23 @@ class DeepMarsDataset(Dataset):
     def __getitem__(self, idx: int):
         """
             Returns an item in the dataset as a dictionary:
-                {'image': image, 'label': label}
+                {'image': image, 'label': label, 'filename': filename}
         """
 
         # Get a sample as: {'image': image, 'label': label}
-        # Return an image with the dimensions 3 x W x H
-        # Because PyTorch models expect these dimensions as inputs.
-        # Transpose dimensions:
-        # (H, W, 3) --> (3, W, H)
+        # Expected dimensions:(3, H, W)
         img_name = self.image_names[idx]
 
-        img = cv2.imread(os.path.join(self.image_dir, img_name))
-
-        img = Tensor(
-           cv2.imread(os.path.join(self.image_dir, img_name))
-        ).transpose(0, 2)
+        # Use convert because some of the images in the dataset are in grayscale.
+        img = Image.open(os.path.join(self.image_dir, img_name)).convert("RGB")
         
-        # Apply normalize
-        img = self.normalize(img)
+        # Apply image preprocessing
+        img = self.transform(img)
     
         return {
             "image": img,
-            "label": self.labels[self.image_names[idx]]
+            "label": self.labels[self.image_names[idx]],
+            "filename": self.image_names[idx]
         }
         
     def __len__(self):
