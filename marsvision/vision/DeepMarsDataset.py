@@ -33,8 +33,8 @@ class DeepMarsDataset(Dataset):
             transforms.CenterCrop(224),
             transforms.ToTensor(), # normalize to [0, 1]
             transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225],
+                mean=[0.485],
+                std=[0.229],
             ),
         ])
                 
@@ -56,7 +56,7 @@ class DeepMarsDataset(Dataset):
         img_name = self.image_names[idx]
 
         # Use convert because some of the images in the dataset are in grayscale.
-        img = Image.open(os.path.join(self.image_dir, img_name)).convert("RGB")
+        img = Image.open(os.path.join(self.image_dir, img_name)).convert("L")
         
         # Apply image preprocessing
         img = self.transform(img)

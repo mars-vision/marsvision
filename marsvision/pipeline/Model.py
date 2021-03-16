@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from PIL import Image
 import sklearn
 import os
 import torch
@@ -63,9 +64,6 @@ class Model:
 
         self.model_type = model_type
 
-        if self.model_type == Model.PYTORCH:
-            assert(self.dataset_root_directory is not None), "No dataset directory specified. You must specify a dataset root directory when using a Pytorch model."
-
         if type(model) == str:
             self.load_model(model, self.model_type)
         else:
@@ -74,7 +72,7 @@ class Model:
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict(self, image_list: np.ndarray, input_dimension: int = None):
+    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
         """
             Run inference using self.model on a list of images using the currently instantiated model.
             
@@ -109,21 +107,29 @@ class Model:
             if input_dimension is None:
                 config_pytorch = self.config["pytorch_cnn_parameters"]
                 input_dimension = config_pytorch["input_dimension"]
+
             # Rescale the image according to the input dimension specified by the user.
             # Apply the standard normalization expected by pre-trained models.
-            # Is there a way to parallelize this procedure?
-            normalize = transforms.Compose([
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(input_dimension),
+                transforms.ToTensor(), # normalize to [0, 1]
+                transforms.Normalize(
+                    mean=[0.485],
+                    std=[0.229],
+                ),
             ])
-            input_tensor = torch.empty(size=(len(image_list), 3, input_dimension, input_dimension))
+
+            # Since our model is trained on grayscale, transform the image to grayscale.
+            input_tensor = torch.empty(size=(len(image_list), 1, input_dimension, input_dimension))
             for i in range(len(image_list)):
-                img_tensor = Tensor(
-                    cv2.resize(image_list[i], (input_dimension, input_dimension), interpolation = cv2.INTER_AREA)
-                ).transpose(0, 2)
-                input_tensor[i] = normalize(img_tensor)
+                img = cv2.cvtColor(image_list[i], cv2.COLOR_RGB2GRAY)
+                img_pil = Image.fromarray(img)
+                input_tensor[i] = transform(img_pil)
 
             # Output index of the maximum confidence score per sample.
-            return self.model(input_tensor).argmax(dim=1)
+            # Return the output tensor as a list.
+            return self.model(input_tensor).argmax(dim=1).tolist()
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
 
