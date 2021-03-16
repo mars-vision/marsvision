@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 import sklearn
 import os
 import torch
@@ -73,7 +74,7 @@ class Model:
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict(self, image_list: np.ndarray):
+    def predict(self, image_list: np.ndarray, input_dimension: int = None):
         """
             Run inference using self.model on a list of images using the currently instantiated model.
             
@@ -84,7 +85,8 @@ class Model:
             ---
 
             Parameters:
-                image_list (List[np.ndarray]): Batch of images to run inference on with this model.
+            image_list (List[np.ndarray]): Batch of images to run inference on with this model.
+            crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
         """
 
         image_list = np.array(image_list)
@@ -104,13 +106,23 @@ class Model:
             inference_list = self.model.predict(image_feature_list)
             return list(map(int, inference_list))
         elif self.model_type == Model.PYTORCH:
-            # Transpose the np array into the expected dimensions:
-            # (samples, channels, height, width)
-            # May want to crop/transform images here to match expected image format
-            image_list = np.transpose(image_list, (0, 3, 2, 1))
-            input_tensor = torch.FloatTensor(image_list)
+            if input_dimension is None:
+                config_pytorch = self.config["pytorch_cnn_parameters"]
+                input_dimension = config_pytorch["input_dimension"]
+            # Rescale the image according to the input dimension specified by the user.
+            # Apply the standard normalization expected by pre-trained models.
+            # Is there a way to parallelize this procedure?
+            normalize = transforms.Compose([
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+            input_tensor = torch.empty(size=(len(image_list), 3, input_dimension, input_dimension))
+            for i in range(len(image_list)):
+                img_tensor = Tensor(
+                    cv2.resize(image_list[i], (input_dimension, input_dimension), interpolation = cv2.INTER_AREA)
+                ).transpose(0, 2)
+                input_tensor[i] = normalize(img_tensor)
 
-            # Output is a list of confidence scores per class; output indices of the maximum value per sample.
+            # Output index of the maximum confidence score per sample.
             return self.model(input_tensor).argmax(dim=1)
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")

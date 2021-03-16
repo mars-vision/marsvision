@@ -14,3 +14,4 @@ pytorch_cnn_parameters:
   train_proportion: 0.8
   test_proportion: 0.05
   num_output_classes: 7
+  input_dimension: 227
