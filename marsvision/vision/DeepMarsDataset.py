@@ -26,7 +26,6 @@ class DeepMarsDataset(Dataset):
                 key, value = items[0], items[1]
                 self.labels[key] = int(value)
 
-
         # Normalize images into [0, 1] with the expected mean and stds.
         self.transform = transforms.Compose([
             transforms.Resize(256),
@@ -41,9 +40,16 @@ class DeepMarsDataset(Dataset):
         # Get image filenames
         self.image_dir = os.path.join(root_dir, "map-proj")
         image_names = os.listdir(os.path.join(self.image_dir))
+
         # Take set difference 
         # to ensure that only labelled images are included
         self.image_names = list(set(image_names) & set(self.labels))
+
+    def get_labels(self):
+        labels = []
+        for image_name in self.image_names:
+            labels.append(self.labels[image_name])
+        return labels
                                   
     def __getitem__(self, idx: int):
         """

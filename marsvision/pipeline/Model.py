@@ -7,8 +7,8 @@ import torch
 import pickle
 from marsvision.pipeline.FeatureExtractor import *
 from marsvision.vision import DeepMarsDataset
-from sklearn.model_selection import cross_validate, StratifiedKFold
-from sklearn.metrics import plot_roc_curve
+from sklearn.model_selection import cross_validate, StratifiedKFold, StratifiedShuffleSplit
+from sklearn.metrics import plot_roc_curve, multilabel_confusion_matrix
 from typing import List
 import torch
 import torchvision
@@ -357,7 +357,7 @@ class Model:
             raise Exception("No model specified in marsvision.pipeline.Model")
 
 
-    def train_model_pytorchcnn(self):
+    def train_and_test_pytorchcnn(self):
         """
             This is an internal helper function which handles the training of a pytorch CNN model.
  
@@ -374,18 +374,17 @@ class Model:
         # Extracting these to named variables because
         # We can later add conditionals that use kwargs with the same keys,
         # to make these function calls a bit more customizable to the user.
-        
         pytorch_parameters = self.config["pytorch_cnn_parameters"]
         num_epochs = pytorch_parameters["num_epochs"]
         learning_rate = pytorch_parameters["gradient_descent_learning_rate"]
         momentum = pytorch_parameters["gradient_descent_momentum"]
         step_size = pytorch_parameters["scheduler_step_size"]
         gamma = pytorch_parameters["scheduler_gamma"]
-        train_proportion = pytorch_parameters["train_proportion"]
         test_proportion = pytorch_parameters["test_proportion"]
+        num_classes = pytorch_parameters["num_output_classes"]
         root_dir = self.dataset_root_directory
 
-         # Parallelize if a valid GPU is available
+        # Parallelize if a valid GPU is available
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = self.model.to(device)
 
@@ -397,45 +396,54 @@ class Model:
 
         # Instantiate the dataset using our custom DeepMarsDataset class (found in the vision folder)
         dataset = DeepMarsDataset(root_dir)
-        dataset_size  = len(dataset)
+        dataset_size = len(dataset)
+        dataset_label_list = dataset.get_labels()
 
-        # Determine the number of samples for our different sets as ints.
-        num_train_samples = int(dataset_size * train_proportion)
-        num_val_samples = int(dataset_size * test_proportion)
-        num_test_samples = dataset_size - num_train_samples - num_val_samples
+        # Generate a stratified train/test split using labels from the dataset object.
+        stratified_shufflesplit = StratifiedShuffleSplit(n_splits=1, test_size=test_proportion)
+        (train_idx, test_idx) = next(stratified_shufflesplit.split(np.zeros(dataset_size), dataset_label_list))
+        
+
+        # Determine the number of samples for our different sets
+        num_train_samples = len(train_idx)
+        num_test_samples = len(test_idx)
         data_sizes = {
             "train": num_train_samples,
-            "val": num_val_samples,
             "test": num_test_samples
         }
 
-        # Split the dataset using the above values.
-        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, 
-            [
-                data_sizes["train"],
-                data_sizes["val"],
-                data_sizes["test"]
-            ],
-            generator = torch.Generator().manual_seed(42)
-        )
+        # These sampler objects get passed to the dataloader with our training and testing indices,
+        # to split the data accordingly.
+        train_sampler = torch.utils.data.SubsetRandomSampler(train_idx)
+        test_sampler = torch.utils.data.SubsetRandomSampler(test_idx)
 
-        # Finally, instantiate the dataloaders using the split sets.
+        # Finally, instantiate the dataloaders using the samplers.
         DataLoaders = {
-            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4, num_workers = 4),
-            "val": torch.utils.data.DataLoader(val_dataset, batch_size = 4, num_workers = 4),
-            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4, num_workers = 4)
+            "train": torch.utils.data.DataLoader(dataset, batch_size = 4, num_workers = 4, sampler = train_sampler),
+            "test": torch.utils.data.DataLoader(dataset, batch_size = 4, num_workers = 4, sampler = test_sampler)
         }
-
        
         # Training starts here.
+        # Since this run is for evaluation,
+        # keep track of metrics here as well.
         best_acc = 0.0
         best_model_wts = copy.deepcopy(model.state_dict())
+
+        # List of dictionaries indexed by epoch:
+        # (predicted_labels, prediction_probabilities, ground_truth_labels)
+        # For use in model evaluation
+        epoch_predictions = [{
+            "predicted_labels": [],
+            "prediction_probabilities": [],
+            "ground_truth_labels": [],
+        }] * num_epochs
+
         for epoch in range(num_epochs):
             print("Epoch: {}/{}".format(epoch, num_epochs - 1))
             print("-" * 10)
-            
-            # Train/Val/Test: 80/5/15
-            for phase in ["train", "val"]:
+
+            # Train/Val
+            for phase in ["train", "test"]:
                 if phase == "train":
                     model.train()
                 else:
@@ -452,40 +460,49 @@ class Model:
                     # Zero the gradients before the forward pass
                     optimizer.zero_grad()
 
-                    # Forward pass if in train phase
+                    # Forward pass. If in train phase, keep grad enabled.
                     with torch.set_grad_enabled(phase == "train"):
                         outputs = model(inputs)
-                        _, preds = torch.max(outputs, 1)
+                        scores, preds = torch.max(outputs, 1)
                         loss = criterion(outputs, labels)
 
                         if phase == "train":
                             # Gradient descent / adjust weights
                             loss.backward()
                             optimizer.step()
-                            
-                    # Note -- what's happening in this loss calculation?
+
                     running_loss += loss.item() * inputs.size(0)
                     running_corrects += int(torch.sum(preds == labels))
 
+                    if phase == "test":
+                        epoch_predictions[epoch]["predicted_labels"].append(preds.tolist())
+                        # Run a softmax function on the scores to turn them into
+                        # probability scores in the range [0, 1].
+                        scores = torch.nn.functional.softmax(scores)
+                        epoch_predictions[epoch]["prediction_probabilities"].append(scores.tolist())
+                        epoch_predictions[epoch]["ground_truth_labels"].append(labels.tolist())
+
+
                 if phase == "train":
                     scheduler.step()
-
+                
                 epoch_loss = running_loss / data_sizes[phase]
                 epoch_acc = running_corrects / data_sizes[phase]
-                print(data_sizes[phase])
-                print('{} loss: {:.4f} Acc: {:.4f} | Images trained on: {}'.format(
+                print('{} loss: {:.4f} Acc: {:.4f} | Images parsed: {}'.format(
                     phase, epoch_loss, epoch_acc, data_sizes[phase]))
 
                 # In the eval phase, get the accuracy for this epoch
                 # If the model's current state is better than the best model seen so far,
                 # replace the best model weights
                 # with the previous best model weights on previous epochs
-                if phase == 'val' and epoch_acc > best_acc:
+                if phase == 'test' and best_acc < epoch_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(model.state_dict())
-                    
+
         print('Best Epoch Acc: {:.4f}'.format(best_acc))
         self.model.load_state_dict(best_model_wts)
+        return epoch_predictions
+
 
     def save_model(self, out_path: str = "model.p"):
         """
