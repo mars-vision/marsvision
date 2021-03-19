@@ -5,6 +5,7 @@ import sklearn
 import os
 import torch
 import pickle
+import pandas as pd
 from marsvision.pipeline.FeatureExtractor import *
 from marsvision.vision import DeepMarsDataset
 from sklearn.model_selection import cross_validate, StratifiedKFold, StratifiedShuffleSplit
@@ -432,11 +433,13 @@ class Model:
         # List of dictionaries indexed by epoch:
         # (predicted_labels, prediction_probabilities, ground_truth_labels)
         # For use in model evaluation
-        epoch_predictions = [{
+        epoch_metrics = {
+            "epoch_acc":  [],
+            "epoch_loss": [],
             "predicted_labels": [],
             "prediction_probabilities": [],
-            "ground_truth_labels": [],
-        }] * num_epochs
+            "ground_truth_labels": []
+        }
 
         for epoch in range(num_epochs):
             print("Epoch: {}/{}".format(epoch, num_epochs - 1))
@@ -448,6 +451,14 @@ class Model:
                     model.train()
                 else:
                     model.eval()
+                    # Create a new entry in the epoch metrics lists
+                    # for each training phase every epoch, 
+                    # containing test results.
+                    epoch_metrics["predicted_labels"].append([])
+                    epoch_metrics["prediction_probabilities"].append([])
+                    epoch_metrics["ground_truth_labels"].append([])
+                    
+                    
                 
                 running_loss = 0.0
                 running_corrects = 0
@@ -475,19 +486,25 @@ class Model:
                     running_corrects += int(torch.sum(preds == labels))
 
                     if phase == "test":
-                        epoch_predictions[epoch]["predicted_labels"].append(preds.tolist())
+                        epoch_metrics["predicted_labels"][epoch].extend(preds.flatten().tolist())
                         # Run a softmax function on the scores to turn them into
                         # probability scores in the range [0, 1].
-                        scores = torch.nn.functional.softmax(scores)
-                        epoch_predictions[epoch]["prediction_probabilities"].append(scores.tolist())
-                        epoch_predictions[epoch]["ground_truth_labels"].append(labels.tolist())
+                        scores_normalized = torch.nn.functional.softmax(scores)
+                        epoch_metrics["prediction_probabilities"][epoch].extend(scores_normalized.flatten().tolist())
+                        epoch_metrics["ground_truth_labels"][epoch].extend(labels.flatten().tolist())
 
 
                 if phase == "train":
                     scheduler.step()
-                
+
                 epoch_loss = running_loss / data_sizes[phase]
                 epoch_acc = running_corrects / data_sizes[phase]
+
+                if phase == "test":
+                    epoch_metrics["epoch_loss"].append(epoch_loss)
+                    epoch_metrics["epoch_acc"].append(epoch_acc)
+
+
                 print('{} loss: {:.4f} Acc: {:.4f} | Images parsed: {}'.format(
                     phase, epoch_loss, epoch_acc, data_sizes[phase]))
 
@@ -498,10 +515,11 @@ class Model:
                 if phase == 'test' and best_acc < epoch_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(model.state_dict())
+                    
 
         print('Best Epoch Acc: {:.4f}'.format(best_acc))
         self.model.load_state_dict(best_model_wts)
-        return epoch_predictions
+        return epoch_metrics
 
 
     def save_model(self, out_path: str = "model.p"):
