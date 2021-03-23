@@ -358,17 +358,35 @@ class Model:
             raise Exception("No model specified in marsvision.pipeline.Model")
 
 
-    def train_and_test_pytorchcnn(self):
+    def train_and_test_cnn(self, out_path: str = None, num_epochs: int = None, test_proportion: float = None):
         """
-            This is an internal helper function which handles the training of a pytorch CNN model.
- 
-            The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the package's config file.
+            Train and evaluate a pytorch CNN model.
+
+            The model is defined in this class' constructor. If a valid pytorch model is used for this object, use this method to train a model and save evaluation information to a file. The trained model will be saved to a file path specified by the user, or directly to the current working directly by default. The information is also retained in a member variable called cnn_evaluation_results. 
+
+            The data is split into train and test sets that are stratified, i.e. the class distributions are preserved between training and testing sets.
+
+            The evaluation data is contained in a dictionary method returns a dictionary containing these keys:
+
+            epoch_acc: List of accuracies for all epochs.
+            epoch_loss: List of loss for all epochs.
+            predicted_labels: 2d array. Each row is a list of predicted labels for the epoch corresponding to its index.
+            ground_truth_labels: True labels over the dataset. 
+            prediction_probabilities: Maximum probabilities of predictions.
+
+            These dictionary members are all lists whose indices correspond to training epochs.
+
+            The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the config file.
 
             ----
 
             Parameters:
 
             root_dir (str): Path to the Deep Mars dataset.
+            out_path: (str): The directory to which files should be saved.
+            num_epochs (int): Named parameter. Number of training epochs. Default values are located in the config file.
+            test_proportion (float): Named parameter. Proportion of data to be used for model evaluation. Expected to be a value in range [0, 1]. The complement (1 - test_proportion) is used to train the model.
+
 
         """
         # Handle Pytorch configuartion file parameters here.
@@ -376,14 +394,23 @@ class Model:
         # We can later add conditionals that use kwargs with the same keys,
         # to make these function calls a bit more customizable to the user.
         pytorch_parameters = self.config["pytorch_cnn_parameters"]
-        num_epochs = pytorch_parameters["num_epochs"]
+        
         learning_rate = pytorch_parameters["gradient_descent_learning_rate"]
         momentum = pytorch_parameters["gradient_descent_momentum"]
         step_size = pytorch_parameters["scheduler_step_size"]
         gamma = pytorch_parameters["scheduler_gamma"]
-        test_proportion = pytorch_parameters["test_proportion"]
+        
         num_classes = pytorch_parameters["num_output_classes"]
+        batch_size = pytorch_parameters["batch_size"]
+        num_workers = pytorch_parameters["num_workers"]
         root_dir = self.dataset_root_directory
+        
+        # Use config file values if these are not present in kwargs
+        if num_epochs is None:
+            num_epochs = pytorch_parameters["num_epochs"]
+        
+        if test_proportion is None:
+            test_proportion = pytorch_parameters["test_proportion"]
 
         # Parallelize if a valid GPU is available
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -420,8 +447,8 @@ class Model:
 
         # Finally, instantiate the dataloaders using the samplers.
         DataLoaders = {
-            "train": torch.utils.data.DataLoader(dataset, batch_size = 4, num_workers = 4, sampler = train_sampler),
-            "test": torch.utils.data.DataLoader(dataset, batch_size = 4, num_workers = 4, sampler = test_sampler)
+            "train": torch.utils.data.DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, sampler = train_sampler),
+            "test": torch.utils.data.DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, sampler = test_sampler)
         }
        
         # Training starts here.
@@ -519,7 +546,21 @@ class Model:
 
         print('Best Epoch Acc: {:.4f}'.format(best_acc))
         self.model.load_state_dict(best_model_wts)
-        return epoch_metrics
+        self.cnn_evaluation_results = epoch_metrics
+
+        if out_path is None:
+            self.save_cnn_evaluation_results()
+            self.save_model("marsvision_cnn.pt")
+        else:
+            self.save_cnn_evaluation_results(os.path.join(out_path,"marsvision_cnn_evaluation.p"))
+            self.save_model(os.path.join(out_path, "marsvision_cnn.pt") )
+
+    def save_cnn_evaluation_results(self, out_path: str = "marsvision_cnn_evaluation.p"):
+        """ 
+            Helper function that saves the evaluation results of CNN training.
+        """
+        with open(out_path, "wb") as out_file:
+            pickle.dump(self.cnn_evaluation_results, out_file)
 
 
     def save_model(self, out_path: str = "model.p"):

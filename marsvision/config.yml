@@ -17,3 +17,5 @@ pytorch_cnn_parameters:
   test_proportion: 0.2
   num_output_classes: 7
   input_dimension: 227
+  batch_size: 4
+  num_workers: 4
