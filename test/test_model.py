@@ -3,9 +3,12 @@ from marsvision.pipeline.ConvNet import ConvNet
 import pickle
 from marsvision.pipeline.Model import Model
 from marsvision.utilities import DataUtility
+from marsvision.vision.ModelDefinitions import alexnet_grayscale
 from unittest import TestCase
 import os
 import numpy as np
+import torch
+from torch import equal
 
 class TestModel(TestCase):
     def setUp(self):
@@ -13,6 +16,7 @@ class TestModel(TestCase):
         # So we can pass data into our model trainer
         self.current_dir = os.path.dirname(__file__)
         test_image_path = os.path.join(self.current_dir, "test_data")
+        self.test_files_path = os.path.join(self.current_dir, "test_files")
 
         # Load test images into memory using DataUtility utility
         self.DataUtility = DataUtility(test_image_path, test_image_path)
@@ -23,6 +27,9 @@ class TestModel(TestCase):
         self.sklearn_logistic_regression = LogisticRegression()
         self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", training_images = self.training_images, training_labels = self.labels)
         self.model_sklearn.train_model()
+
+        self.deepmars_test_path = os.path.join(self.current_dir, "deep_mars_test_data")
+        self.model_pytorch = Model(alexnet_grayscale(), "pytorch", dataset_root_directory = self.deepmars_test_path)
 
 
     def test_save_load_inference(self):
@@ -63,8 +70,34 @@ class TestModel(TestCase):
         np.testing.assert_equal(lr_before.n_iter_, lr_after.n_iter_)
 
     def test_cross_validate_plot(self):
-        # Simply run the binary cross validation routine to validate it in this test
+        # Run the binary cross validation routine to validate it in this test
         self.model_sklearn.cross_validate_plot(2)
+
+
+    def test_pytorch_training(self):
+        # Run the pytorch training method to cover it.
+        # Saves two files: marsvision_cnn.pt and marsvision_cnn_evaluation.p
+        self.model_pytorch.train_and_test_cnn(num_epochs = 1, out_path = self.test_files_path)
+
+        # Test the load_model method for a pytorch model.
+        # load_model is called internally when a path to the model is provided.
+        testing_model = Model(os.path.join(self.test_files_path, "marsvision_cnn.pt"), "pytorch")
+
+        os.remove(os.path.join(self.test_files_path, "marsvision_cnn.pt"))
+        os.remove(os.path.join(self.test_files_path, "marsvision_cnn_evaluation.p"))
+
+    def test_pytorch_inference(self):
+        # Test pytorch inference.
+        # Ensure that the inference is in the same format as the sklearn inference
+        # This is to ensure that both methods write to the database in the same way.
+
+        # Both should return a list of ints representing class labels.
+        pytorch_predict = self.model_pytorch.predict(self.DataUtility.images)
+        sklearn_predict = self.model_sklearn.predict(self.DataUtility.images)
+        self.assertEqual(len(pytorch_predict), len(sklearn_predict))
+        self.assertTrue(all(isinstance(x, int) for x in pytorch_predict))
+        self.assertTrue(all(isinstance(x, int)) for x in sklearn_predict)
+
 
     
 

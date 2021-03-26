@@ -1,15 +1,19 @@
 import numpy as np
+import cv2
+from PIL import Image
 import sklearn
 import os
 import torch
 import pickle
+import pandas as pd
 from marsvision.pipeline.FeatureExtractor import *
 from marsvision.vision import DeepMarsDataset
-from sklearn.model_selection import cross_validate, StratifiedKFold
-from sklearn.metrics import plot_roc_curve
+from sklearn.model_selection import cross_validate, StratifiedKFold, StratifiedShuffleSplit
+from sklearn.metrics import plot_roc_curve, multilabel_confusion_matrix
 from typing import List
 import torch
 import torchvision
+from torchvision import transforms
 from torch import Tensor
 from torch import nn
 from torch import optim
@@ -18,6 +22,7 @@ from torch.optim import lr_scheduler
 import matplotlib.pyplot as plt
 from marsvision.config_path import CONFIG_PATH
 import yaml
+from typing import Dict
 
 class Model:
     PYTORCH = "pytorch"
@@ -61,9 +66,6 @@ class Model:
 
         self.model_type = model_type
 
-        if self.model_type == Model.PYTORCH:
-            assert(self.dataset_root_directory is not None), "No dataset directory specified. You must specify a dataset root directory when using a Pytorch model."
-
         if type(model) == str:
             self.load_model(model, self.model_type)
         else:
@@ -72,7 +74,7 @@ class Model:
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict(self, image_list: np.ndarray):
+    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
         """
             Run inference using self.model on a list of images using the currently instantiated model.
             
@@ -83,9 +85,11 @@ class Model:
             ---
 
             Parameters:
-                image_list (List[np.ndarray]): Batch of images to run inference on with this model.
+            image_list (List[np.ndarray]): Batch of images to run inference on with this model.
+            crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
         """
 
+        image_list = np.array(image_list)
         # Handle the case of a single image by casting it as a list with itself in it
         if len(image_list.shape) == 3:
             image_list = [image_list]
@@ -95,14 +99,41 @@ class Model:
             # Extract features,
             # Use self.model for inference on each
             # Return a list of inferences
+            image_list = np.array(image_list)
             image_feature_list = []
             for image in image_list:
                 image_feature_list.append(FeatureExtractor.extract_features(image))
             inference_list = self.model.predict(image_feature_list)
             return list(map(int, inference_list))
+        elif self.model_type == Model.PYTORCH:
+            if input_dimension is None:
+                config_pytorch = self.config["pytorch_cnn_parameters"]
+                input_dimension = config_pytorch["input_dimension"]
+                crop_dimension = config_pytorch["crop_dimension"]
 
-        elif self.model_type == Model.PYTORCH: # pragma: no cover
-            # TODO: Implement pytorch for model class
+            # Rescale the image according to the input dimension specified by the user.
+            # Apply the standard normalization expected by pre-trained models.
+            transform = transforms.Compose([
+                transforms.Resize(crop_dimension),
+                transforms.CenterCrop(input_dimension),
+                transforms.ToTensor(), # normalize to [0, 1]
+                transforms.Normalize(
+                    mean=[0.485],
+                    std=[0.229],
+                ),
+            ])
+
+            # Since Deep Mars is trained on grayscale images, transform the images to greyscale.
+            input_tensor = torch.empty(size=(len(image_list), 1, input_dimension, input_dimension))
+            for i in range(len(image_list)):
+                img = cv2.cvtColor(image_list[i], cv2.COLOR_RGB2GRAY)
+                img_pil = Image.fromarray(img)
+                input_tensor[i] = transform(img_pil)
+
+            # Output index of the maximum confidence score per sample.
+            # Return the output tensor as a list.
+            return self.model(input_tensor).argmax(dim=1).tolist()
+        else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
 
     def set_training_data(self, training_images: np.ndarray, training_labels: List[str]):
@@ -329,139 +360,214 @@ class Model:
             raise Exception("No model specified in marsvision.pipeline.Model")
 
 
-    def train_model_pytorchcnn(self):
+    def train_and_test_cnn(self, out_path: str = None, num_epochs: int = None, test_proportion: float = None):
         """
-            This is an internal helper function which handles the training of a pytorch CNN model.
- 
-            The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the package's config file.
+            Train and evaluate a pytorch CNN model.
+
+            The model is defined in this class' constructor. If a valid pytorch model is used for this object, use this method to train a model and save evaluation information to a file. The trained model will be saved to a file path specified by the user, or directly to the current working directly by default. The information is also retained in a member variable called cnn_evaluation_results. 
+
+            The data is split into train and test sets that are stratified, i.e. the class distributions are preserved between training and testing sets.
+
+            The evaluation data is contained in a dictionary method returns a dictionary containing these keys:
+
+            epoch_acc: List of accuracies for all epochs.
+            epoch_loss: List of loss for all epochs.
+            predicted_labels: 2d array. Each row is a list of predicted labels for the epoch corresponding to its index.
+            ground_truth_labels: True labels over the dataset. 
+            prediction_probabilities: Maximum probabilities of predictions.
+
+            These dictionary members are all lists whose indices correspond to training epochs.
+
+            The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the config file.
 
             ----
 
             Parameters:
 
             root_dir (str): Path to the Deep Mars dataset.
+            out_path: (str): The directory to which files should be saved.
+            num_epochs (int): Named parameter. Number of training epochs. Default values are located in the config file.
+            test_proportion (float): Named parameter. Proportion of data to be used for model evaluation. Expected to be a value in range [0, 1]. The complement (1 - test_proportion) is used to train the model.
+
 
         """
         # Handle Pytorch configuartion file parameters here.
         # Extracting these to named variables because
         # We can later add conditionals that use kwargs with the same keys,
         # to make these function calls a bit more customizable to the user.
-        
         pytorch_parameters = self.config["pytorch_cnn_parameters"]
-        num_epochs = pytorch_parameters["num_epochs"]
+        
         learning_rate = pytorch_parameters["gradient_descent_learning_rate"]
         momentum = pytorch_parameters["gradient_descent_momentum"]
         step_size = pytorch_parameters["scheduler_step_size"]
         gamma = pytorch_parameters["scheduler_gamma"]
-        train_proportion = pytorch_parameters["train_proportion"]
-        test_proportion = pytorch_parameters["test_proportion"]
+        
+        num_classes = pytorch_parameters["num_output_classes"]
+        batch_size = pytorch_parameters["batch_size"]
+        num_workers = pytorch_parameters["num_workers"]
         root_dir = self.dataset_root_directory
+        
+        # Use config file values if these are not present in kwargs
+        if num_epochs is None:
+            num_epochs = pytorch_parameters["num_epochs"]
+        
+        if test_proportion is None:
+            test_proportion = pytorch_parameters["test_proportion"]
+
+        # Parallelize if a valid GPU is available
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        model = self.model.to(device)
 
         # Initialize using values from the config file.
-        optimizer = optim.SGD(self.model.parameters(), lr=learning_rate, momentum=momentum)
+        optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
         # Decay by a factor of gamma every step_size epochs
         scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
         criterion = nn.CrossEntropyLoss() 
 
         # Instantiate the dataset using our custom DeepMarsDataset class (found in the vision folder)
         dataset = DeepMarsDataset(root_dir)
-        dataset_size  = len(dataset)
+        dataset_size = len(dataset)
+        dataset_label_list = dataset.get_labels()
 
-        # Determine the number of samples for our different sets as ints.
-        num_train_samples = int(dataset_size * train_proportion)
-        num_val_samples = int(dataset_size * test_proportion)
-        num_test_samples = dataset_size - num_train_samples - num_val_samples
+        # Generate a stratified train/test split using labels from the dataset object.
+        stratified_shufflesplit = StratifiedShuffleSplit(n_splits=1, test_size=test_proportion)
+        (train_idx, test_idx) = next(stratified_shufflesplit.split(np.zeros(dataset_size), dataset_label_list))
+        
+
+        # Determine the number of samples for our different sets
+        num_train_samples = len(train_idx)
+        num_test_samples = len(test_idx)
         data_sizes = {
             "train": num_train_samples,
-            "val": num_val_samples,
             "test": num_test_samples
         }
 
-        # Split the dataset using the above values.
-        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, 
-            [
-                data_sizes["train"],
-                data_sizes["val"],
-                data_sizes["test"]
-            ],
-            generator = torch.Generator().manual_seed(42)
-        )
+        # These sampler objects get passed to the dataloader with our training and testing indices,
+        # to split the data accordingly.
+        train_sampler = torch.utils.data.SubsetRandomSampler(train_idx)
+        test_sampler = torch.utils.data.SubsetRandomSampler(test_idx)
 
-        # Finally, instantiate the dataloaders using the split sets.
+        # Finally, instantiate the dataloaders using the samplers.
         DataLoaders = {
-            "train": torch.utils.data.DataLoader(train_dataset, batch_size = 4),
-            "val": torch.utils.data.DataLoader(val_dataset, batch_size = 4),
-            "test": torch.utils.data.DataLoader(test_dataset, batch_size = 4)
+            "train": torch.utils.data.DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, sampler = train_sampler),
+            "test": torch.utils.data.DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, sampler = test_sampler)
+        }
+       
+        # Training starts here.
+        # Since this run is for evaluation,
+        # keep track of metrics here as well.
+        best_acc = 0.0
+        best_model_wts = copy.deepcopy(model.state_dict())
+
+        # List of dictionaries indexed by epoch:
+        # (predicted_labels, prediction_probabilities, ground_truth_labels)
+        # For use in model evaluation
+        epoch_metrics: Dict[str, list] = {
+            "epoch_acc":  [],
+            "epoch_loss": [],
+            "predicted_labels": [],
+            "prediction_probabilities": [],
+            "ground_truth_labels": []
         }
 
-        # Parallelize if a valid GPU is available
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        
-        # Training starts here.
-        best_acc = 0.0
-        best_model_wts = copy.deepcopy(self.model.state_dict())
         for epoch in range(num_epochs):
             print("Epoch: {}/{}".format(epoch, num_epochs - 1))
             print("-" * 10)
-            
-            # Train/Val/Test: 80/5/15
-            for phase in ["train", "val"]:
+
+            # Train/Val
+            for phase in ["train", "test"]:
                 if phase == "train":
-                    self.model.train()
+                    model.train()
                 else:
-                    self.model.eval()
+                    model.eval()
+                    # Create a new entry in the epoch metrics lists
+                    # for each training phase every epoch, 
+                    # containing test results.
+                    epoch_metrics["predicted_labels"].append([])
+                    epoch_metrics["prediction_probabilities"].append([])
+                    epoch_metrics["ground_truth_labels"].append([])
+                    
+                    
                 
                 running_loss = 0.0
                 running_corrects = 0
 
-                # Get samples in batches (specified in the DataLoader objects).
+                # Get samples in batches
                 for sample in DataLoaders[phase]:
-                    inputs = Tensor(sample["image"]).to(device)
-                    labels = sample["label"]
+                    inputs = sample["image"].to(device)
+                    labels = sample["label"].to(device)
 
                     # Zero the gradients before the forward pass
                     optimizer.zero_grad()
 
-                    # Forward pass if in train phase
+                    # Forward pass. If in train phase, keep grad enabled.
                     with torch.set_grad_enabled(phase == "train"):
-                        outputs = self.model(inputs)
-                        _, preds = torch.max(outputs, 1)
+                        outputs = model(inputs)
+                        scores, preds = torch.max(outputs, 1)
                         loss = criterion(outputs, labels)
 
                         if phase == "train":
                             # Gradient descent / adjust weights
                             loss.backward()
                             optimizer.step()
-                            
-                    # Note -- what's happening in this loss calculation?
+
                     running_loss += loss.item() * inputs.size(0)
                     running_corrects += int(torch.sum(preds == labels))
-                    print("Running loss: {} | Running corrects: {}".format(
-                    running_loss, running_corrects))
 
-                    if phase == "train":
-                        scheduler.step()
+                    if phase == "test":
+                        epoch_metrics["predicted_labels"][epoch].extend(preds.flatten().tolist())
+                        # Run a softmax function on the scores to turn them into
+                        # probability scores in the range [0, 1].
+                        scores_normalized = torch.nn.functional.softmax(scores)
+                        epoch_metrics["prediction_probabilities"][epoch].extend(scores_normalized.flatten().tolist())
+                        epoch_metrics["ground_truth_labels"][epoch].extend(labels.flatten().tolist())
+
+
+                if phase == "train":
+                    scheduler.step()
 
                 epoch_loss = running_loss / data_sizes[phase]
                 epoch_acc = running_corrects / data_sizes[phase]
-                print(data_sizes[phase])
-                print('{} loss: {:.4f} Acc: {:.4f} | Images trained on: {}'.format(
+
+                if phase == "test":
+                    epoch_metrics["epoch_loss"].append(epoch_loss)
+                    epoch_metrics["epoch_acc"].append(epoch_acc)
+
+
+                print('{} loss: {:.4f} Acc: {:.4f} | Images parsed: {}'.format(
                     phase, epoch_loss, epoch_acc, data_sizes[phase]))
 
                 # In the eval phase, get the accuracy for this epoch
                 # If the model's current state is better than the best model seen so far,
                 # replace the best model weights
                 # with the previous best model weights on previous epochs
-                if phase == 'val' and epoch_acc > best_acc:
+                if phase == 'test' and best_acc < epoch_acc:
                     best_acc = epoch_acc
-                    best_model_wts = copy.deepcopy(self.model.state_dict())
+                    best_model_wts = copy.deepcopy(model.state_dict())
                     
+
         print('Best Epoch Acc: {:.4f}'.format(best_acc))
         self.model.load_state_dict(best_model_wts)
+        self.cnn_evaluation_results = epoch_metrics
+
+        if out_path is None:
+            self.save_cnn_evaluation_results()
+            self.save_model("marsvision_cnn.pt")
+        else:
+            self.save_cnn_evaluation_results(os.path.join(out_path,"marsvision_cnn_evaluation.p"))
+            self.save_model(os.path.join(out_path, "marsvision_cnn.pt") )
+
+    def save_cnn_evaluation_results(self, out_path: str = "marsvision_cnn_evaluation.p"):
+        """ 
+            Helper function that saves the evaluation results of CNN training.
+        """
+        with open(out_path, "wb") as out_file:
+            pickle.dump(self.cnn_evaluation_results, out_file)
+
 
     def save_model(self, out_path: str = "model.p"):
         """
-            Saves a pickle file containing this object's model.
+            Saves a pickle file containing this object's model. The model can either be a Pytorch or SKlearn model.
 
             -------
 
@@ -472,21 +578,32 @@ class Model:
         if self.model_type == Model.SKLEARN:
             with open(out_path, "wb") as out_file:
                 pickle.dump(self.model, out_file)
-                
-        if self.model_type == Model.PYTORCH: # pragma: no cover
+        elif self.model_type == Model.PYTORCH: # pragma: no cover
             torch.save(self.model, out_path)
+        else:
+            raise Exception("No model type selected in this Model object.")
 
 
     def load_model(self, input_path: str, model_type: str):
         """
-            Loads a model into this object from a pickle file, into the self.model member.
+            Loads a model into this object from a file, into the self.model member. The model can either be a Pytorch model saved via torch.save() or an SKlearn model.
 
             -------
 
             Parameters:
+
             out_path(str): The input location of the file to be read.
             model_type(str): The model type. Either "sklearn" or "pytorch".
         """
-        with open(input_path, 'rb') as in_file:
-            self.model = pickle.load(in_file)
+
         self.model_type = model_type
+
+        if self.model_type == Model.SKLEARN:
+            with open(input_path, 'rb') as in_file:
+                self.model = pickle.load(in_file)
+        elif self.model_type == Model.PYTORCH:
+            self.model = torch.load(input_path)
+        else:
+            raise Exception("Model_type does not match a valid class. Specify 'pytorch' or 'sklearn'.")
+
+        
