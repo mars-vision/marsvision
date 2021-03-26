@@ -22,6 +22,7 @@ from torch.optim import lr_scheduler
 import matplotlib.pyplot as plt
 from marsvision.config_path import CONFIG_PATH
 import yaml
+from typing import Dict
 
 class Model:
     PYTORCH = "pytorch"
@@ -461,7 +462,7 @@ class Model:
         # List of dictionaries indexed by epoch:
         # (predicted_labels, prediction_probabilities, ground_truth_labels)
         # For use in model evaluation
-        epoch_metrics = {
+        epoch_metrics: Dict[str, list] = {
             "epoch_acc":  [],
             "epoch_loss": [],
             "predicted_labels": [],
