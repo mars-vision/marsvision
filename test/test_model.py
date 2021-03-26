@@ -7,6 +7,8 @@ from marsvision.vision.ModelDefinitions import alexnet_grayscale
 from unittest import TestCase
 import os
 import numpy as np
+import torch
+from torch import equal
 
 class TestModel(TestCase):
     def setUp(self):
@@ -72,11 +74,30 @@ class TestModel(TestCase):
         self.model_sklearn.cross_validate_plot(2)
 
 
-    def test_pytorch_evaluation(self):
-        # Run the training and testing method to cover it.
+    def test_pytorch_training(self):
+        # Run the pytorch training method to cover it.
+        # Saves two files: marsvision_cnn.pt and marsvision_cnn_evaluation.p
         self.model_pytorch.train_and_test_cnn(num_epochs = 1, out_path = self.test_files_path)
+
+        # Test the load_model method for a pytorch model.
+        # load_model is called internally when a path to the model is provided.
+        testing_model = Model(os.path.join(self.test_files_path, "marsvision_cnn.pt"), "pytorch")
+
         os.remove(os.path.join(self.test_files_path, "marsvision_cnn.pt"))
         os.remove(os.path.join(self.test_files_path, "marsvision_cnn_evaluation.p"))
+
+    def test_pytorch_inference(self):
+        # Test pytorch inference.
+        # Ensure that the inference is in the same format as the sklearn inference
+        # This is to ensure that both methods write to the database in the same way.
+
+        # Both should return a list of ints representing class labels.
+        pytorch_predict = self.model_pytorch.predict(self.DataUtility.images)
+        sklearn_predict = self.model_sklearn.predict(self.DataUtility.images)
+        self.assertEqual(len(pytorch_predict), len(sklearn_predict))
+        self.assertTrue(all(isinstance(x, int) for x in pytorch_predict))
+        self.assertTrue(all(isinstance(x, int)) for x in sklearn_predict)
+
 
     
 

@@ -3,6 +3,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torch import Tensor
+import yaml
+from marsvision.config_path import CONFIG_PATH
+
 class DeepMarsDataset(Dataset):
     def __init__(self, root_dir: str):
         """
@@ -26,10 +29,17 @@ class DeepMarsDataset(Dataset):
                 key, value = items[0], items[1]
                 self.labels[key] = int(value)
 
+        # Get image input size from config file
+        with open(CONFIG_PATH) as yaml_cfg:
+            config = yaml.load(yaml_cfg)
+            config_pytorch = config["pytorch_cnn_parameters"]
+            resize_dimension = config_pytorch["crop_dimension"]
+            input_dimension = config_pytorch["input_dimension"]
+
         # Normalize images into [0, 1] with the expected mean and stds.
         self.transform = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            transforms.Resize(resize_dimension),
+            transforms.CenterCrop(input_dimension),
             transforms.ToTensor(), # normalize to [0, 1]
             transforms.Normalize(
                 mean=[0.485],

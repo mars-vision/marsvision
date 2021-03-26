@@ -108,11 +108,12 @@ class Model:
             if input_dimension is None:
                 config_pytorch = self.config["pytorch_cnn_parameters"]
                 input_dimension = config_pytorch["input_dimension"]
+                crop_dimension = config_pytorch["crop_dimension"]
 
             # Rescale the image according to the input dimension specified by the user.
             # Apply the standard normalization expected by pre-trained models.
             transform = transforms.Compose([
-                transforms.Resize(256),
+                transforms.Resize(crop_dimension),
                 transforms.CenterCrop(input_dimension),
                 transforms.ToTensor(), # normalize to [0, 1]
                 transforms.Normalize(
@@ -121,7 +122,7 @@ class Model:
                 ),
             ])
 
-            # Since our model is trained on grayscale, transform the image to grayscale.
+            # Since Deep Mars is trained on grayscale images, transform the images to greyscale.
             input_tensor = torch.empty(size=(len(image_list), 1, input_dimension, input_dimension))
             for i in range(len(image_list)):
                 img = cv2.cvtColor(image_list[i], cv2.COLOR_RGB2GRAY)

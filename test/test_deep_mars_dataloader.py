@@ -1,7 +1,7 @@
 from unittest import TestCase
 from marsvision.vision import DeepMarsDataset
-from torch import Tensor
 import torch
+from torch import Tensor
 import os
 import cv2
 
