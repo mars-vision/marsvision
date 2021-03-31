@@ -30,3 +30,7 @@ test/test_files/marsvision.db
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+Prototyping/Notebooks/pytorch-eval/alexnet_deepmars3-25.pt
+
+Prototyping/Notebooks/pytorch-eval/alexnet-results-3-25.p
