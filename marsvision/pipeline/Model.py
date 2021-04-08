@@ -602,7 +602,10 @@ class Model:
             with open(input_path, 'rb') as in_file:
                 self.model = pickle.load(in_file)
         elif self.model_type == Model.PYTORCH:
-            self.model = torch.load(input_path)
+            if torch.cuda.is_available():
+                self.model = torch.load(input_path)
+            else:
+                self.model = torch.load(input_path, map_location="cpu")
         else:
             raise Exception("Model_type does not match a valid class. Specify 'pytorch' or 'sklearn'.")
 
