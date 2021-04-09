@@ -81,7 +81,7 @@ class DataUtility:
                         file_names.append(file)
                         labels.append(os.path.basename(root))
 
-        self.images = images
+        self.images = np.array(images)
         self.file_names = file_names
         self.labels = labels
 

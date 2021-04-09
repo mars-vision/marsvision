@@ -5,6 +5,10 @@ import pandas as pd
 import cv2
 from typing import List
 import numpy as np
+import yaml
+import pdsc
+
+
 
 class SlidingWindow:
     def __init__(self, model: Model, 
@@ -39,7 +43,7 @@ class SlidingWindow:
         self.model = model
         self.db_path = db_path
         
-    def sliding_window_predict(self, image_list: np.ndarray, filename_list: List[str]):
+    def sliding_window_predict(self, image_list: np.ndarray, metadata_list):
         """
             Runs the sliding window algorithm
             and makes a prediction for each window.
@@ -51,14 +55,14 @@ class SlidingWindow:
             Parameters
 
             image_list (numpy.ndarray): Image data represented as a numpy.ndarray.
-            filename_list (List[str]): List of file names associated with the input image list.
+            metadata_list: List of PDSC metadata objects.
 
         """
 
         # Open the DB connection and write global attributes
         self.conn = sqlite3.connect(self.db_path)
         self.create_sql_table()
-        self.write_global_to_sql(filename_list)
+        self.write_global_to_sql(metadata_list)
 
         # Number of images in the given batch
         batch_size = len(image_list)
@@ -73,7 +77,10 @@ class SlidingWindow:
         global_id_list.reverse()
         global_id_list = list(zip(*global_id_list))[0]
 
+        print(image_list)
+        print(image_list.shape)
         image_width = image_list.shape[1]
+        
         image_height = image_list.shape[2]
 
         for y in range(0, image_width, self.stride_x):
@@ -87,7 +94,7 @@ class SlidingWindow:
                 window_list = image_list[:, y:y_slice + y + 1, x:x_slice + x + 1, :]
 
                 # Predict with model, store image coordinates of window in database
-                self.write_window_to_sql(self.model.predict(window_list), x, y, global_id_list)
+                self.write_window_to_sql(self.model.predict(window_list), metadata_list, x, y, global_id_list)
 
         # We're done with the database by this point, so close the connection 
         self.conn.close()
@@ -102,7 +109,7 @@ class SlidingWindow:
         sql = """
             CREATE TABLE IF NOT EXISTS global (
                 "id"	INTEGER,
-                "filename"	REAL,
+                "observation_id"	TEXT,
                 "stride_length_x"	INTEGER,
                 "stride_length_y"	INTEGER,
                 "window_length"	INTEGER,
@@ -113,7 +120,7 @@ class SlidingWindow:
         c = self.conn.cursor()
         c.execute(sql)
                     
-    def write_global_to_sql(self, filename_list: List[str]):
+    def write_global_to_sql(self, metadata_list: List[str]):
         """
             Write entries for every image in the current batch of images.            
 
@@ -126,21 +133,26 @@ class SlidingWindow:
 
             Parameters
             
-            filename_list (List[str]): List of file names of the image batch. Can be used to derive the observation ID.
+            metdata_list (List[str]): List of PDSC metadata objects. Can be used to derive the observation ID.
         """
-        row_count = len(filename_list)
+        observation_ids = [metadata.observation_id for metadata in metadata_list ]
+        row_count = len(metadata_list)
         image_dataframe = pd.DataFrame({
                     "stride_length_x": [self.stride_x] * row_count,
                     "stride_length_y": [self.stride_y] * row_count,
                     "window_length": [self.window_length] * row_count,
                     "window_height": [self.window_height] * row_count,
-                    "filename": filename_list
+                    "observation_id": observation_ids
             }
         )
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
+
+    def get_coordinates_from_metadata(self, metadata, pixel_coord_x, pixel_coord_y):
+        rdr_localizer = pdsc.get_localizer(metadata)
+        return rdr_localizer.pixel_to_latlon(pixel_coord_x, pixel_coord_y)
         
 
-    def write_window_to_sql(self, prediction_list: List[int], window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray):
+    def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray):
         """
             Write a batch of inferences to the database. Include information about the window's location in its parent image,
             as well as a reference key to the parent image in the global table.
@@ -148,17 +160,22 @@ class SlidingWindow:
             ----
 
             Parameters
-            prediction_list (np.ndarray): Batch of label inferrences from the model.
+            prediction_list (np.ndarray): Batch of label inferences from the model.
             window_coord_x (int): x coordinate of the window on the parent image.
             window_coord_y (int): y coordinate of the window on the parent image.
             gloal_id (int): ID of parent image in Global table (which holds information about the image).
         """
+
+        # Get window latitude/longitude coordinates here from PDSC queries.
+        latlong_mid = [self.get_coordinates_from_metadata(metadata, window_coord_x + self.window_length / 2, window_coord_y + self.window_height / 2) for metadata in metadata_list]
         row_count = len(prediction_list)
         window_dataframe = pd.DataFrame({
                     "prediction": prediction_list,
-                    "coord_x": [window_coord_x] * row_count,
-                    "coord_y": [window_coord_y] *row_count,
-                    "global_id": global_id_list
+                    "pixel_coord_x": [window_coord_x] * row_count,
+                    "pixel_coord_y": [window_coord_y] *row_count,
+                    "global_id": global_id_list,
+                    "lat_x": latlong_mid[0],
+                    "lat_y": latlong_mid[1]
                 },
         )
         window_dataframe.to_sql('windows', con=self.conn, if_exists="append", index=False)
