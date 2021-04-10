@@ -9,10 +9,10 @@ import numpy as np
 def main(model_file, model_mode):
     # Set up PDSC images here.
     client = pdsc.PdsClient("pdsc\pdsc_tables")
-    metadata_list = [client.query_by_observation_id('hirise_rdr', ['PSP_010341_1775'])[0]]
+    metadata_list = client.query_by_observation_id('hirise_rdr', ['PSP_010341_1775', 'ESP_018920_1755'])
     image_list = get_images_from_metadata(metadata_list)
     model = Model("alexnet_deepmars3-25.pt", "pytorch")
-    sliding_window = SlidingWindow(model)
+    sliding_window = SlidingWindow(model, "marsvision.db", 256, 256, 256, 256)
     sliding_window.sliding_window_predict(image_list, metadata_list)
 
     
@@ -30,8 +30,6 @@ def get_images_from_metadata(metadata_list):
         image = np.asarray(bytearray(response.read()), dtype="uint8")
         image = cv2.imdecode(image, cv2.IMREAD_COLOR)
         image_list.append(image)
-    image_list = np.array(image_list)
-    image_list.shape
     return image_list
 
 if __name__ == "__main__":

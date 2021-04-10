@@ -77,24 +77,44 @@ class SlidingWindow:
         global_id_list.reverse()
         global_id_list = list(zip(*global_id_list))[0]
 
-        print(image_list)
-        print(image_list.shape)
-        image_width = image_list.shape[1]
-        
-        image_height = image_list.shape[2]
+        # Get the width of the widest image, 
+        # and height of the tallest image.
+        image_widths = [image.shape[1] for image in image_list]
+        image_heights = [image.shape[0] for image in image_list]
+        max_width = max(image_widths)
+        max_height = max(image_heights)
 
-        for y in range(0, image_width, self.stride_x):
-            for x in range(0, image_height, self.stride_y):
-                # Slice window either to edge of image, or to end of window
-                y_slice = min(image_width - y, self.window_height)
-                x_slice = min(image_height - x, self.window_length)
+        # Handle images of different sizes by 
+        # sliding the window over the dimensions of the largest image,
+        # and checking if the same window is valid for smaller images.
+        for y in range(0, max_width, self.stride_x):
+            for x in range(0, max_height, self.stride_y):
+                window_list = []
+                metadata_filtered_list = []
+                global_id_filtered_list = []
 
-                # Needs to be a vector of windows,
-                # to send to the model predict function as a "list of images" 
-                window_list = image_list[:, y:y_slice + y + 1, x:x_slice + x + 1, :]
+                # Only include windows from images
+                # if the indexing is not out of range.
+                for i in range(len(image_list)):
+                    if x < image_widths[i] and y < image_heights[i]:
+                        # Slice window either to edge of this image, or to end of window
+                        y_slice = min(image_heights[i] - y, self.window_height)
+                        x_slice = min(image_widths[i] - x, self.window_length)
+                        window_list.append(image_list[i][y:y_slice + y + 1, x:x_slice + x + 1, :])
+                        metadata_filtered_list.append(metadata_list[i])
+                        global_id_filtered_list.append(global_id_list[i])
+                        
 
+                
+                
+                # Don't do anything if there is no input
+                # This occurs if the sliding window algorithm does not pass in any windows
+                # e.g. when the window overflows on both dimensions.
+                if len(window_list) == 0:
+                    continue
                 # Predict with model, store image coordinates of window in database
-                self.write_window_to_sql(self.model.predict(window_list), metadata_list, x, y, global_id_list)
+
+                self.write_window_to_sql(self.model.predict(window_list), metadata_filtered_list, x, y, global_id_filtered_list)
 
         # We're done with the database by this point, so close the connection 
         self.conn.close()
@@ -121,6 +141,7 @@ class SlidingWindow:
         c.execute(sql)
                     
     def write_global_to_sql(self, metadata_list: List[str]):
+
         """
             Write entries for every image in the current batch of images.            
 
@@ -135,7 +156,7 @@ class SlidingWindow:
             
             metdata_list (List[str]): List of PDSC metadata objects. Can be used to derive the observation ID.
         """
-        observation_ids = [metadata.observation_id for metadata in metadata_list ]
+        observation_ids = [metadata.observation_id for metadata in metadata_list]
         row_count = len(metadata_list)
         image_dataframe = pd.DataFrame({
                     "stride_length_x": [self.stride_x] * row_count,
@@ -148,7 +169,7 @@ class SlidingWindow:
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
 
     def get_coordinates_from_metadata(self, metadata, pixel_coord_x, pixel_coord_y):
-        rdr_localizer = pdsc.get_localizer(metadata)
+        rdr_localizer = pdsc.get_localizer(metadata, "EQUIRECTANGULAR")
         return rdr_localizer.pixel_to_latlon(pixel_coord_x, pixel_coord_y)
         
 
@@ -168,14 +189,15 @@ class SlidingWindow:
 
         # Get window latitude/longitude coordinates here from PDSC queries.
         latlong_mid = [self.get_coordinates_from_metadata(metadata, window_coord_x + self.window_length / 2, window_coord_y + self.window_height / 2) for metadata in metadata_list]
+        latlong_mid = list(zip(*latlong_mid))
         row_count = len(prediction_list)
         window_dataframe = pd.DataFrame({
                     "prediction": prediction_list,
                     "pixel_coord_x": [window_coord_x] * row_count,
                     "pixel_coord_y": [window_coord_y] *row_count,
                     "global_id": global_id_list,
-                    "lat_x": latlong_mid[0],
-                    "lat_y": latlong_mid[1]
+                    "latitude_midpoint": latlong_mid[0],
+                    "longitude_midpoint": latlong_mid[1]
                 },
         )
         window_dataframe.to_sql('windows', con=self.conn, if_exists="append", index=False)
