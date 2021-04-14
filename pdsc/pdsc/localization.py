@@ -459,7 +459,7 @@ class MapLocalizer(Localizer):
         See https://hirise-pds.lpl.arizona.edu/PDS/CATALOG/DSMAP.CAT for a
         further description of these parameters.
         """
-        self.proj_type = proj_type
+        self.proj_type = proj_type.strip()
         self.proj_latitude = np.deg2rad(proj_latitude)
         self.proj_longitude = np.deg2rad(proj_longitude)
         self.map_scale = map_scale

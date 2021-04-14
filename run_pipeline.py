@@ -9,7 +9,21 @@ import numpy as np
 def main(model_file, model_mode):
     # Set up PDSC images here.
     client = pdsc.PdsClient("pdsc\pdsc_tables")
-    metadata_list = client.query_by_observation_id('hirise_rdr', ['PSP_010341_1775', 'ESP_018920_1755'])
+    metadata_list = client.query_by_observation_id('hirise_rdr', [
+        'PSP_006569_1135',
+        'PSP_006570_1820',
+        'PSP_006570_1820',
+        'PSP_006571_1905',
+        'PSP_006571_1905',
+        'PSP_006572_1665',
+        'PSP_006572_1665',
+        'PSP_006573_1560',
+        'PSP_006573_1560',
+        'PSP_006574_1375',
+        'PSP_006574_1375',
+        'PSP_006575_1280',
+        'PSP_006575_1280'
+        ])
     image_list = get_images_from_metadata(metadata_list)
     model = Model(model_file, model_mode)
     sliding_window = SlidingWindow(model, "marsvision.db", 256, 256, 256, 256)

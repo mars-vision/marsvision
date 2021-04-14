@@ -186,8 +186,9 @@ class SlidingWindow:
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
 
     def get_coordinates_from_metadata(self, metadata, pixel_coord_x, pixel_coord_y):
-        rdr_localizer = pdsc.get_localizer(metadata, "EQUIRECTANGULAR")
-        return rdr_localizer.pixel_to_latlon(pixel_coord_x, pixel_coord_y)
+        rdr_localizer = pdsc.get_localizer(metadata)
+        latlong = rdr_localizer.pixel_to_latlon(pixel_coord_y, pixel_coord_x)
+        return latlong
 
     def write_metadata_to_sql(self, metadata_list):
         """
@@ -226,17 +227,41 @@ class SlidingWindow:
             gloal_id (int): ID of parent image in Global table (which holds information about the image).
         """
 
-        # Get window latitude/longitude coordinates here from PDSC queries.
-        latlong_mid = [self.get_coordinates_from_metadata(metadata, window_coord_x + self.window_length / 2, window_coord_y + self.window_height / 2) for metadata in metadata_list]
-        latlong_mid = list(zip(*latlong_mid))
+        # Get window latitude/longitude information for each window.
+        # Calculate the min and max latitudes and longitudes of our window.
+        # Done by getting them for the top left and bottom right corners (i.e. (min, min) and (max, max))
+        latlong_min = []
+        latlong_max = []
+        for metadata in metadata_list:
+            # Put together lists of tuples: (latitude, longitude)
+            latlong_min.append(self.get_coordinates_from_metadata(metadata, window_coord_x, window_coord_y))
+            latlong_max.append(self.get_coordinates_from_metadata(metadata, window_coord_x + self.window_length, window_coord_y + self.window_height))
+
+        # Rearrange the list of coordinate pairs so that we have a tuple of latitudes,
+        # and a tuple of longitudes.
+        latlong_min = list(zip(*latlong_min))
+        latlong_max = list(zip(*latlong_max))
+
+       
+
+        # Put together parallel lists to pass to the dataframe
+        min_latitudes = latlong_max[0]
+        min_longitudes = latlong_min[1]
+        max_latitudes = latlong_min[0]
+        max_longitudes = latlong_max[1]
+
+
+
         row_count = len(prediction_list)
         window_dataframe = pd.DataFrame({
                     "prediction": prediction_list,
                     "pixel_coord_x": [window_coord_x] * row_count,
                     "pixel_coord_y": [window_coord_y] *row_count,
                     "global_id": global_id_list,
-                    "latitude_midpoint": latlong_mid[0],
-                    "longitude_midpoint": latlong_mid[1]
+                    "minimum_longitude": min_longitudes,
+                    "minimum_latitude": min_latitudes,
+                    "maximum_longitude": max_longitudes,
+                    "maximum_latitude": max_latitudes
                 },
         )
         window_dataframe.to_sql('windows', con=self.conn, if_exists="append", index=False)
