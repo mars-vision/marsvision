@@ -11,11 +11,9 @@ def main(model_file, model_mode):
     client = pdsc.PdsClient("pdsc\pdsc_tables")
     metadata_list = client.query_by_observation_id('hirise_rdr', ['PSP_010341_1775', 'ESP_018920_1755'])
     image_list = get_images_from_metadata(metadata_list)
-    model = Model("alexnet_deepmars3-25.pt", "pytorch")
+    model = Model(model_file, model_mode)
     sliding_window = SlidingWindow(model, "marsvision.db", 256, 256, 256, 256)
     sliding_window.sliding_window_predict(image_list, metadata_list)
-
-    
 
 def parse_file_name_to_url(file_name_specification):
     url_suffix = file_name_specification.split(".")[0] + ".abrowse.jpg"

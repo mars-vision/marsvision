@@ -7,8 +7,7 @@ from typing import List
 import numpy as np
 import yaml
 import pdsc
-
-
+from pdsc.metadata import json_dumps
 
 class SlidingWindow:
     def __init__(self, model: Model, 
@@ -63,6 +62,7 @@ class SlidingWindow:
         self.conn = sqlite3.connect(self.db_path)
         self.create_sql_table()
         self.write_global_to_sql(metadata_list)
+        
 
         # Number of images in the given batch
         batch_size = len(image_list)
@@ -76,6 +76,10 @@ class SlidingWindow:
         global_id_list = c.fetchall()
         global_id_list.reverse()
         global_id_list = list(zip(*global_id_list))[0]
+
+        # Write metadata to a SQL table.
+        # Use global id's to tie metadata to parent images.
+        self.write_metadata_to_sql(metadata_list)
 
         # Get the width of the widest image, 
         # and height of the tallest image.
@@ -104,17 +108,18 @@ class SlidingWindow:
                         metadata_filtered_list.append(metadata_list[i])
                         global_id_filtered_list.append(global_id_list[i])
                         
-
-                
-                
                 # Don't do anything if there is no input
-                # This occurs if the sliding window algorithm does not pass in any windows
-                # e.g. when the window overflows on both dimensions.
+                # This occurs if the sliding window does not land on any images.
+                # i.e. when the window overflows on both dimensions.
                 if len(window_list) == 0:
                     continue
                 # Predict with model, store image coordinates of window in database
 
+                # Write the window to a SQL table.
+                # Pass the filtered list of metadata and global id's
                 self.write_window_to_sql(self.model.predict(window_list), metadata_filtered_list, x, y, global_id_filtered_list)
+
+                
 
         # We're done with the database by this point, so close the connection 
         self.conn.close()
@@ -130,10 +135,12 @@ class SlidingWindow:
             CREATE TABLE IF NOT EXISTS global (
                 "id"	INTEGER,
                 "observation_id"	TEXT,
+                "product_id"    TEXT,
                 "stride_length_x"	INTEGER,
                 "stride_length_y"	INTEGER,
                 "window_length"	INTEGER,
                 "window_height"	INTEGER,
+                "model_type" TEXT,
                 PRIMARY KEY("id" AUTOINCREMENT)
             );
         """
@@ -154,15 +161,25 @@ class SlidingWindow:
 
             Parameters
             
-            metdata_list (List[str]): List of PDSC metadata objects. Can be used to derive the observation ID.
+            metdata_list (List[str]): List of PDSC metadata objects. Can be used to derive the observation ID and product ID.
         """
+
+        # Observation IDs are not unique as observations product multiple files,
+        #  though they tell us which observation goes with which files.
         observation_ids = [metadata.observation_id for metadata in metadata_list]
+
+        # Product ID is the unique identifier for a given image.
+        # This is the foreign key to the metadata table.
+        # This is how we can tie entries in this table to image metadata.
+        product_ids = [metadata.product_id for metadata in metadata_list]
         row_count = len(metadata_list)
         image_dataframe = pd.DataFrame({
                     "stride_length_x": [self.stride_x] * row_count,
                     "stride_length_y": [self.stride_y] * row_count,
                     "window_length": [self.window_length] * row_count,
                     "window_height": [self.window_height] * row_count,
+                    "model_type": [self.model.model_type] * row_count,
+                    "product_id": product_ids,
                     "observation_id": observation_ids
             }
         )
@@ -171,7 +188,29 @@ class SlidingWindow:
     def get_coordinates_from_metadata(self, metadata, pixel_coord_x, pixel_coord_y):
         rdr_localizer = pdsc.get_localizer(metadata, "EQUIRECTANGULAR")
         return rdr_localizer.pixel_to_latlon(pixel_coord_x, pixel_coord_y)
+
+    def write_metadata_to_sql(self, metadata_list):
+        """
+            Write image metadata to a separate table.
+
+            This is the metadata associated with the images via the PDSC api.
+        """
+        # json_dumps is part of the pdsc API. Parses a PDSC metadata object to JSON format.
+        metadata_dataframe = pd.read_json(json_dumps(metadata_list))
         
+        # Dates are formatted as weird JSON objects.
+        # These lines extract the formatted string.
+        # E.g. 2007-09-23T00:22:40.000000'
+        metadata_dataframe["start_time"] = metadata_dataframe["start_time"].apply(lambda datedict: datedict["__datetime__"]["__val__"])
+        metadata_dataframe["observation_start_time"] = metadata_dataframe["observation_start_time"].apply(lambda datedict: datedict["__datetime__"]["__val__"])
+        metadata_dataframe["stop_time"] = metadata_dataframe["stop_time"].apply(lambda datedict: datedict["__datetime__"]["__val__"])
+
+        # Typecasting everything to str avoids errors in the to_sql call.
+        metadata_dataframe = metadata_dataframe.applymap(str)
+
+        # Write to the metadata table.
+        metadata_dataframe.to_sql('metadata', con=self.conn, if_exists="append", index=False)
+
 
     def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray):
         """
