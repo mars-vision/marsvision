@@ -15,4 +15,4 @@ pip install mypy
 pip install exif
 cd pdsc
 pip install .
-pdsc_ingest ./pdsc_tables/RDRCUMINDEX.LBL ./pdsc_tables
+pdsc_ingest ./pdsc_test_tables/RDRINDEX.LBL ./pdsc_tables
