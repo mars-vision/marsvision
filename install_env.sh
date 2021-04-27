@@ -13,3 +13,5 @@ pip install pytorch_sphinx_theme
 pip install opencv-python
 pip install mypy
 pip install exif
+pip install ./pdsc
+pdsc_ingest ./pdsc/pdsc_tables/RDRCUMINDEX.LBL ./pdsc/pdsc_tables
