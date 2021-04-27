@@ -15,7 +15,7 @@ install:
 # command to run tests
 script:
   - source activate marsvision
-  - python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning --ignore pdsc
+  - python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning --ignore marsvision/pdsc
   - mypy -p marsvision
   - cd docs
   - make html
