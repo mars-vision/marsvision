@@ -1,6 +1,6 @@
 import torch
 import yaml
-from marsvision.config_path import CONFIG_PATH
+from marsvision.path_definitions import CONFIG_PATH
 import torch.nn as nn
 
 with open(CONFIG_PATH) as yaml_cfg:

@@ -20,7 +20,7 @@ from torch import optim
 import copy
 from torch.optim import lr_scheduler
 import matplotlib.pyplot as plt
-from marsvision.config_path import CONFIG_PATH
+from marsvision.path_definitions import CONFIG_PATH
 import yaml
 from typing import Dict
 

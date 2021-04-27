@@ -242,16 +242,13 @@ class SlidingWindow:
         latlong_min = list(zip(*latlong_min))
         latlong_max = list(zip(*latlong_max))
 
-       
 
         # Put together parallel lists to pass to the dataframe
         min_latitudes = latlong_max[0]
         min_longitudes = latlong_min[1]
         max_latitudes = latlong_min[0]
         max_longitudes = latlong_max[1]
-
-
-
+        
         row_count = len(prediction_list)
         window_dataframe = pd.DataFrame({
                     "prediction": prediction_list,

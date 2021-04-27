@@ -100,23 +100,3 @@ class TestModel(TestCase):
 
 
     
-
-    
-
-    """
-    Come back to this when we come back to pytorch
-    def test_save_load_pytorch(self):
-        pytorch_nn = ConvNet()
-        trainer_pytorch = Model(self.training_images, self.labels, pytorch_nn, "pytorch")
-        trainer_pytorch.train_model()
-
-        nn_before = trainer_pytorch.model
-        trainer_pytorch.save_model("test_pytorch_model.p")
-        self.self.model_sklearn.load_model("test_pytorch_model.p")
-        nn_after = trainer_pytorch.model
-
-        for p1, p2 in zip(nn_before.parameters(), nn_after.parameters()):
-            if p1.data.ne(p2.data).sum > 0:
-                return False
-            eturn True
-    """ 
