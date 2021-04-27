@@ -147,7 +147,7 @@ class SlidingWindow:
         c = self.conn.cursor()
         c.execute(sql)
                     
-    def write_global_to_sql(self, metadata_list: List[str]):
+    def write_global_to_sql(self, metadata_list):
 
         """
             Write entries for every image in the current batch of images.            
