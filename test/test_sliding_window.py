@@ -1,6 +1,6 @@
 from marsvision.pipeline import SlidingWindow
 from marsvision.pipeline import Model
-from marsvision.path_definitions import PDSC_DIR
+from marsvision.path_definitions import PDSC_TABLE_PATH
 from unittest import TestCase
 import cv2
 import os
@@ -22,7 +22,7 @@ class TestSlidingWindow(TestCase):
         model.load_model(test_model_path, "sklearn")
         
         # Get PDSC Metadata objects to pass into the sliding window object.
-        client = pdsc.PdsClient(PDSC_DIR)
+        client = pdsc.PdsClient(PDSC_TABLE_PATH)
         test_metadata_ids = [
             "PSP_006569_1135",
             "PSP_006570_1820",
