@@ -604,8 +604,11 @@ class Model:
         else:
             raise Exception("Model_type does not match a valid class. Specify 'pytorch' or 'sklearn'.")
 
+    @staticmethod
     def get_evaluation_dataframe(training_file: str):
         """
+            Static method.
+
             Takes a file of the format produced by the train_and_test_cnn method.
 
             Produces a dataframe containing rows of evaluation metrics.
