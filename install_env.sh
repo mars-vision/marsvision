@@ -17,7 +17,6 @@ cd pdsc
 pip install .
 mkdir pdsc_tables
 cd pdsc_tables
-touch output.txt
 curl https://hirise-pds.lpl.arizona.edu/PDS/INDEX/RDRCUMINDEX.TAB -o RDRCUMINDEX.TAB
 curl https://hirise-pds.lpl.arizona.edu/PDS/INDEX/RDRCUMINDEX.LBL -o RDRCUMINDEX.LBL
 cd ..
