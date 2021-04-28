@@ -15,4 +15,9 @@ pip install mypy
 pip install exif
 cd pdsc
 pip install .
-pdsc_ingest ./pdsc_test_tables/RDRINDEX.LBL ./pdsc_tables
+mkdir pdsc_tables
+cd pdsc_tables
+curl https://hirise-pds.lpl.arizona.edu/PDS/INDEX/RDRCUMINDEX.TAB
+curl https://hirise-pds.lpl.arizona.edu/PDS/INDEX/RDRCUMINDEX.LBL
+cd ..
+pdsc_ingest ./pdsc_tables/RDRCUMINDEX.LBL ./pdsc_tables
