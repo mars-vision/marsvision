@@ -604,4 +604,61 @@ class Model:
         else:
             raise Exception("Model_type does not match a valid class. Specify 'pytorch' or 'sklearn'.")
 
-        
+    def get_evaluation_dataframe(training_file: str):
+        """
+            Takes a file of the format produced by the train_and_test_cnn method.
+
+            Produces a dataframe containing rows of evaluation metrics.
+
+            Each row is an epoch, and each column is a different metirc.
+
+            Metrics included are:
+                Accuracy
+                Precision (OVA per class)
+                Recall (OVA per class)
+
+            ------
+
+            Parameters:
+            training_file (str): Path to the evaluation results file.
+        """
+
+        cnn_training_results = pickle.load(open(training_file, "rb"))
+
+        # eval_list will contain lists of metrics.
+        # Each entry represents a set of metrics by epoch.
+        eval_list = []
+        for epoch in range(len(cnn_training_results["epoch_acc"])):
+            # epoch_list will contain evaluation results for this epoch (in the loop)
+            epoch_list = [cnn_training_results["epoch_acc"][epoch]]
+            precisions = []
+            recalls = []
+
+            # Use predicted and true labels to derive precisions and recalls/
+            y_pred = cnn_training_results["predicted_labels"][epoch]
+            y_true = cnn_training_results["ground_truth_labels"][epoch]
+
+            # SKLearn call that produces OVA confusion matrices
+            confusion_matrices = multilabel_confusion_matrix(y_true, y_pred)
+            for matrix in confusion_matrices:
+                # Derive precision and recall from these matrices
+                precision = matrix[1][1] / (matrix[1][0] + matrix[1][1])
+                recall = matrix[1][1] / (matrix[0][1] + matrix[1][1])
+
+                precisions.append(precision)
+                recalls.append(recall)
+            # Epoch list will now contain accuracy, precision values, and recalls
+            epoch_list.extend(precisions + recalls)
+            eval_list.append(epoch_list)
+
+
+        # Put together list used for dataframe headings.
+        dataframe_headings = ["accuracy"]
+        # len(confusion_matrices) is the number of classes
+        # there's probably a better way to get the number of classes.
+        for label in range(len(confusion_matrices)):
+            dataframe_headings.append("precision_" + str(label))
+        for label in range(len(confusion_matrices)):
+            dataframe_headings.append("recall_" + str(label))
+
+        return pd.DataFrame(eval_list, columns=dataframe_headings)

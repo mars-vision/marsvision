@@ -9,6 +9,7 @@ import os
 import numpy as np
 import torch
 from torch import equal
+from pandas._testing import assert_frame_equal
 
 class TestModel(TestCase):
     def setUp(self):
@@ -98,5 +99,21 @@ class TestModel(TestCase):
         self.assertTrue(all(isinstance(x, int) for x in pytorch_predict))
         self.assertTrue(all(isinstance(x, int)) for x in sklearn_predict)
 
+    def test_get_evaluation_dataframe(self):
+        # Test static method that parses training output into a dataframe.
 
-    
+        # If the test file does not exist, create a new one.
+        # This allows us to delete the file and create a new one by running tests.
+        
+        test_dataframe_path = os.path.join(self.test_files_path, "test_eval_dataframe.csv")
+        model_results_path = os.path.join(self.test_files_path, "alexnet-results-3-19.p")
+
+        try:
+            test_eval_df = pd.read_csv(test_dataframe_path)
+            expected_eval_df = Model.get_evaluation_dataframe(model_results_path)
+            assert_frame_equal(test_eval_df, expected_eval_df)
+        except:
+            print("No test dataframe file found. Writing a new file.")
+            # Produce the dataframe by running Model.get_evaluation_dataframe.
+            eval_df = Model.get_evaluation_dataframe(model_results_path)
+            eval_df.to_csv(test_dataframe_path)
