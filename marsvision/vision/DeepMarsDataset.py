@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torch import Tensor
 import yaml
-from marsvision.config_path import CONFIG_PATH
+from marsvision.path_definitions import CONFIG_PATH
 
 class DeepMarsDataset(Dataset):
     def __init__(self, root_dir: str):

@@ -81,7 +81,7 @@ class DataUtility:
                         file_names.append(file)
                         labels.append(os.path.basename(root))
 
-        self.images = images
+        self.images = np.array(images)
         self.file_names = file_names
         self.labels = labels
 
@@ -107,7 +107,6 @@ class DataUtility:
         self.df = pd.DataFrame(data = self.feature_list)
         self.df["class"] = self.labels
         self.df["file_name"] = self.file_names
-        self.df["img_data"] = self.images
         LE = LabelEncoder()
         self.df["class_code"] = LE.fit_transform(self.df["class"])
 
@@ -120,7 +119,6 @@ class DataUtility:
         # Write features to CSV with path names.
         # Use the feature extractor to retrieve features from images.
         out_file = os.path.join(self.out_path, "output.csv")
-        self.df = self.df.drop("img_data", axis=1)
         self.df.to_csv(out_file, index=False)
 
     def run(self):

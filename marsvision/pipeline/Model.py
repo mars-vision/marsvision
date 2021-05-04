@@ -20,7 +20,7 @@ from torch import optim
 import copy
 from torch.optim import lr_scheduler
 import matplotlib.pyplot as plt
-from marsvision.config_path import CONFIG_PATH
+from marsvision.path_definitions import CONFIG_PATH
 import yaml
 from typing import Dict
 
@@ -89,17 +89,11 @@ class Model:
             crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
         """
 
-        image_list = np.array(image_list)
-        # Handle the case of a single image by casting it as a list with itself in it
-        if len(image_list.shape) == 3:
-            image_list = [image_list]
-
         if self.model_type == Model.SKLEARN:
             # Iterate images in batch,
             # Extract features,
             # Use self.model for inference on each
             # Return a list of inferences
-            image_list = np.array(image_list)
             image_feature_list = []
             for image in image_list:
                 image_feature_list.append(FeatureExtractor.extract_features(image))
@@ -125,6 +119,7 @@ class Model:
 
             # Since Deep Mars is trained on grayscale images, transform the images to greyscale.
             input_tensor = torch.empty(size=(len(image_list), 1, input_dimension, input_dimension))
+
             for i in range(len(image_list)):
                 img = cv2.cvtColor(image_list[i], cv2.COLOR_RGB2GRAY)
                 img_pil = Image.fromarray(img)
@@ -132,6 +127,10 @@ class Model:
 
             # Output index of the maximum confidence score per sample.
             # Return the output tensor as a list.
+
+            # TODO: Return confidences of predicted classes
+            # Highest confidence probabilities
+            # like sklearn predict_proba
             return self.model(input_tensor).argmax(dim=1).tolist()
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
@@ -609,4 +608,64 @@ class Model:
         else:
             raise Exception("Model_type does not match a valid class. Specify 'pytorch' or 'sklearn'.")
 
-        
+    @staticmethod
+    def get_evaluation_dataframe(training_file: str):
+        """
+            Static method.
+
+            Takes a file of the format produced by the train_and_test_cnn method.
+
+            Produces a dataframe containing rows of evaluation metrics.
+
+            Each row is an epoch, and each column is a different metirc.
+
+            Metrics included are:
+                Accuracy
+                Precision (OVA per class)
+                Recall (OVA per class)
+
+            ------
+
+            Parameters:
+            training_file (str): Path to the evaluation results file.
+        """
+
+        cnn_training_results = pickle.load(open(training_file, "rb"))
+
+        # eval_list will contain lists of metrics.
+        # Each entry represents a set of metrics by epoch.
+        eval_list = []
+        for epoch in range(len(cnn_training_results["epoch_acc"])):
+            # epoch_list will contain evaluation results for this epoch (in the loop)
+            epoch_list = [cnn_training_results["epoch_acc"][epoch]]
+            precisions = []
+            recalls = []
+
+            # Use predicted and true labels to derive precisions and recalls/
+            y_pred = cnn_training_results["predicted_labels"][epoch]
+            y_true = cnn_training_results["ground_truth_labels"][epoch]
+
+            # SKLearn call that produces OVA confusion matrices
+            confusion_matrices = multilabel_confusion_matrix(y_true, y_pred)
+            for matrix in confusion_matrices:
+                # Derive precision and recall from these matrices
+                precision = matrix[1][1] / (matrix[1][0] + matrix[1][1])
+                recall = matrix[1][1] / (matrix[0][1] + matrix[1][1])
+
+                precisions.append(precision)
+                recalls.append(recall)
+            # Epoch list will now contain accuracy, precision values, and recalls
+            epoch_list.extend(precisions + recalls)
+            eval_list.append(epoch_list)
+
+
+        # Put together list used for dataframe headings.
+        dataframe_headings = ["accuracy"]
+        # len(confusion_matrices) is the number of classes
+        # there's probably a better way to get the number of classes.
+        for label in range(len(confusion_matrices)):
+            dataframe_headings.append("precision_" + str(label))
+        for label in range(len(confusion_matrices)):
+            dataframe_headings.append("recall_" + str(label))
+
+        return pd.DataFrame(eval_list, columns=dataframe_headings)

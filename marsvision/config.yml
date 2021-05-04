@@ -5,8 +5,6 @@ training_options:
   # Set this to 'pytorch' or 'sklearn'
   train_mode: pytorch
 
-sklearn_parameters:
-
 
 pytorch_cnn_parameters:
   num_epochs: 5
@@ -20,3 +18,20 @@ pytorch_cnn_parameters:
   crop_dimension: 256
   batch_size: 4
   num_workers: 4
+
+
+random_pipeline_parameters:
+  window_strides:
+    - 8
+    - 16
+    - 32
+    - 64
+    - 128
+    - 256
+  window_sizes:
+    - 32
+    - 64
+    - 128
+    - 256
+    - 512
+    - 1024
