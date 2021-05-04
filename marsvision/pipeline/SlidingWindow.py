@@ -107,6 +107,7 @@ class SlidingWindow:
                         window_list.append(image_list[i][y:y_slice + y + 1, x:x_slice + x + 1, :])
                         metadata_filtered_list.append(metadata_list[i])
                         global_id_filtered_list.append(global_id_list[i])
+
                         
                 # Don't do anything if there is no input
                 # This occurs if the sliding window does not land on any images.
@@ -117,6 +118,8 @@ class SlidingWindow:
 
                 # Write the window to a SQL table.
                 # Pass the filtered list of metadata and global id's
+
+                # TODO: Save slices of windows if past a confidence threshold
                 self.write_window_to_sql(self.model.predict(window_list), metadata_filtered_list, x, y, global_id_filtered_list)
 
                 

@@ -127,6 +127,10 @@ class Model:
 
             # Output index of the maximum confidence score per sample.
             # Return the output tensor as a list.
+
+            # TODO: Return confidences of predicted classes
+            # Highest confidence probabilities
+            # like sklearn predict_proba
             return self.model(input_tensor).argmax(dim=1).tolist()
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
