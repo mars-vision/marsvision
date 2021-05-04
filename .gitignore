@@ -32,12 +32,17 @@ pdsc/pdsc_tables
 .dmypy.json
 dmypy.json
 
-Prototyping/Notebooks/pytorch-eval/alexnet_deepmars3-25.pt
 
-Prototyping/Notebooks/pytorch-eval/alexnet-results-3-25.p
+# Pytorch and pickle files (.pt and p)
+*.p
+*.pt
 
-Prototyping/Notebooks/alexnet_deepmars3-25.pt
+# PDSC Library and table files
+*.LBL
+*.TAB
 
+# PDSC Directory
 pdsc/pdsc_tables/
 
+# VSCpde stiff
 .vscode/settings.json
