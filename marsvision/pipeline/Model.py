@@ -124,7 +124,7 @@ class Model:
                 img = cv2.cvtColor(image_list[i], cv2.COLOR_RGB2GRAY)
                 img_pil = Image.fromarray(img)
                 input_tensor[i] = transform(img_pil)
-
+                
             # Output index of the maximum confidence score per sample.
             # Return the output tensor as a list.
 

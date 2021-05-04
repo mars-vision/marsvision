@@ -108,14 +108,15 @@ class SlidingWindow:
                         metadata_filtered_list.append(metadata_list[i])
                         global_id_filtered_list.append(global_id_list[i])
 
-                        
+                        # Write the window to a file if beyond a threshold
+
                 # Don't do anything if there is no input
                 # This occurs if the sliding window does not land on any images.
                 # i.e. when the window overflows on both dimensions.
                 if len(window_list) == 0:
                     continue
-                # Predict with model, store image coordinates of window in database
 
+                # Predict with model, store image coordinates of window in database
                 # Write the window to a SQL table.
                 # Pass the filtered list of metadata and global id's
 
