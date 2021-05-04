@@ -22,12 +22,12 @@ pytorch_cnn_parameters:
 
 random_pipeline_parameters:
   window_strides:
+    - 8
+    - 16
     - 32
     - 64
     - 128
     - 256
-    - 512
-    - 1024
   window_sizes:
     - 32
     - 64
