@@ -117,10 +117,6 @@ class SlidingWindow:
         # Handle images of different sizes by 
         # sliding the window over the dimensions of the largest image,
         # and checking if the same window is valid for smaller images.
-
-        # Create label directories if they do not exist.
-
-
         for y in range(0, max_width, self.stride_x):
             for x in range(0, max_height, self.stride_y):
                 window_list = []
@@ -134,7 +130,7 @@ class SlidingWindow:
                         # Slice window either to edge of this image, or to end of window
                         y_slice = min(image_heights[i] - y, self.window_height)
                         x_slice = min(image_widths[i] - x, self.window_length)
-                        window_list.append(image_list[i][y:y_slice + y + 1, x:x_slice + x + 1, :])
+                        window_list.append(image_list[i][y:y_slice + y, x:x_slice + x, :])
                         metadata_filtered_list.append(metadata_list[i])
                         global_id_filtered_list.append(global_id_list[i])
 
@@ -180,7 +176,9 @@ class SlidingWindow:
         """
             Writes files to labelled folders.
 
-            Used to save cropped images of windows that exceed a confidence threshold.
+            Takes as input various attributes of the windows from the sliding window algorithm.
+
+            Used as a helper to save cropped images of windows that exceed a confidence threshold.
 
             Attached to the filenames are metadata to make identification of the parent image, pixel location,
             latitude, and longitude possible.
@@ -199,11 +197,15 @@ class SlidingWindow:
             # Puts together a filename with identifying information,
             # allowing us to identify what image and what the coordinates
             # of the window are.
-            filename = "{product_id}-global_id_{global_id}-pixel_coordcx_{x_coord}-pixel_coord_y_{y_coord}.png".format(
+            filename = "{product_id}-global_id_{global_id}-pixel_coord_x_{x_coord}-pixel_coord_y_{y_coord}.png".format(
                 product_id = product_id, global_id = global_id, x_coord = x_coord, y_coord = y_coord)
+            
+            prediction_label = str(prediction_list[i])
+            label_folder = os.path.join(self.window_output_root, prediction_label)
+            if not os.path.exists(label_folder):
+                os.makedirs(label_folder)
 
-            label = str(prediction_list[i])
-            output_path = os.path.join(self.window_output_root, label, filename)
+            output_path = os.path.join(label_folder, filename)
             window = window_list[i]
             cv2.imwrite(output_path, window)
 
