@@ -8,6 +8,8 @@ import numpy as np
 import yaml
 import pdsc
 from pdsc.metadata import json_dumps
+import os
+from marsvision.path_definitions import CONFIG_PATH
 
 class SlidingWindow:
     def __init__(self, model: Model, 
@@ -15,7 +17,9 @@ class SlidingWindow:
         window_length: int = 32,
         window_height: int = 32, 
         stride_x : int = 32, 
-        stride_y: int = 32):
+        stride_y: int = 32,
+        window_output_root: str = None,
+        confidence_threshold: str = None):
         """
             This class is responsible for running the sliding window pipeline,
             which will run through segments of an image with a window of user specified
@@ -24,6 +28,7 @@ class SlidingWindow:
             The results of the classification, as well as window and image information,
             is stored in a SQLite database.
 
+            Windows that are scored beyond a threshold by the model will be cropped and output to an output folder. The default value can be specified in the config.yml file.
             ------
 
             Parameters:
@@ -33,15 +38,36 @@ class SlidingWindow:
             window_height (int): Height of window on the vertical axis in pixels.
             stride_x (int): Stride of window along the horizontal axis in pixels.
             stride_y (int): Stride of window along the vertical axis in pixels.
+            window_output_root (string): Root folder for the cropped output images.
+            confidence_threshold (string): Probability threshold. Images over this threshold will be cropped out and saved to the output folder.
 
         """
+
+        # Open config file
+        with open(CONFIG_PATH) as yaml_cfg:
+            self.config = yaml.load(yaml_cfg)
+            self.config_sliding_window = self.config["sliding_window_parameters"]
+            
+        # Initialize variables with a default from the config file,
+        # or user specified parameter.
+        if confidence_threshold is None:
+            self.confidence_threshold = self.config_sliding_window["confidence_threshold"]
+        else:
+            self.confidence_threshold = confidence_threshold
+        
+        # Initialize window output root
+        if window_output_root is None:
+            self.window_output_root = self.config_sliding_window["window_output_root"]
+        else:
+            self.window_output_root = window_output_root
+            
         self.window_length = window_length
         self.window_height = window_height
         self.stride_x = stride_x
         self.stride_y = stride_y
         self.model = model
         self.db_path = db_path
-        
+
     def sliding_window_predict(self, image_list: np.ndarray, metadata_list):
         """
             Runs the sliding window algorithm
@@ -104,28 +130,85 @@ class SlidingWindow:
                         # Slice window either to edge of this image, or to end of window
                         y_slice = min(image_heights[i] - y, self.window_height)
                         x_slice = min(image_widths[i] - x, self.window_length)
-                        window_list.append(image_list[i][y:y_slice + y + 1, x:x_slice + x + 1, :])
+                        window_list.append(image_list[i][y:y_slice + y, x:x_slice + x, :])
                         metadata_filtered_list.append(metadata_list[i])
                         global_id_filtered_list.append(global_id_list[i])
 
-                        
+                        # Write the window to a file if beyond a threshold
+
                 # Don't do anything if there is no input
                 # This occurs if the sliding window does not land on any images.
                 # i.e. when the window overflows on both dimensions.
                 if len(window_list) == 0:
                     continue
-                # Predict with model, store image coordinates of window in database
 
+                # Predict with model, store image coordinates of window in database
                 # Write the window to a SQL table.
                 # Pass the filtered list of metadata and global id's
+                confidence_score_list = self.model.predict_proba(window_list).max(axis = 1)
+                prediction_list = self.model.predict(window_list)
+                self.save_high_confidence_windows(confidence_score_list, prediction_list, metadata_filtered_list, window_list, x, y, global_id_filtered_list)
+                self.write_window_to_sql(prediction_list, metadata_filtered_list, x, y, global_id_filtered_list, confidence_score_list)
 
-                # TODO: Save slices of windows if past a confidence threshold
-                self.write_window_to_sql(self.model.predict(window_list), metadata_filtered_list, x, y, global_id_filtered_list)
-
-                
-
+               
+        # Drop duplicate metadata entries here
+        # Not the cleanest way of doing this...
+        drop_duplicate_query = """
+                DELETE FROM metadata
+                WHERE rowid NOT IN (
+                    SELECT MIN(rowid) 
+                    FROM metadata 
+                    GROUP BY product_id
+                )
+            """
+        c.execute(drop_duplicate_query)
         # We're done with the database by this point, so close the connection 
         self.conn.close()
+
+    def save_high_confidence_windows(self, 
+        confidence_score_list: List[int],
+        prediction_list: List[int],
+        metadata_list: List[object], 
+        window_list: np.ndarray, 
+        x_coord: int, y_coord: int, 
+        global_id_list: List[str], 
+        confidence_threshold: float = None):
+        """
+            Writes files to labelled folders.
+
+            Takes as input various attributes of the windows from the sliding window algorithm.
+
+            Used as a helper to save cropped images of windows that exceed a confidence threshold.
+
+            Attached to the filenames are metadata to make identification of the parent image, pixel location,
+            latitude, and longitude possible.
+        """
+
+        # np.where returns indices for the the filter condition,
+        # Which is a confidence score of at least confidence_threshold.
+        # Iterate through these indices to produce files.
+        for i in np.where(confidence_score_list > self.confidence_threshold)[0]:
+            product_id = metadata_list[i].product_id.strip()
+
+            # Global id is the primary key of this window's corresponding
+            # entry in the global table (which contains records of runs of the sliding window pipeline)
+            global_id = global_id_list[i]
+            
+            # Puts together a filename with identifying information,
+            # allowing us to identify what image and what the coordinates
+            # of the window are.
+            filename = "{product_id}-global_id_{global_id}-pixel_coord_x_{x_coord}-pixel_coord_y_{y_coord}.png".format(
+                product_id = product_id, global_id = global_id, x_coord = x_coord, y_coord = y_coord)
+            
+            prediction_label = str(prediction_list[i])
+            label_folder = os.path.join(self.window_output_root, prediction_label)
+            if not os.path.exists(label_folder):
+                os.makedirs(label_folder)
+
+            output_path = os.path.join(label_folder, filename)
+            window = window_list[i]
+            cv2.imwrite(output_path, window)
+
 
     def create_sql_table(self):
         """
@@ -149,7 +232,7 @@ class SlidingWindow:
         """
         c = self.conn.cursor()
         c.execute(sql)
-                    
+
     def write_global_to_sql(self, metadata_list):
 
         """
@@ -216,7 +299,8 @@ class SlidingWindow:
         metadata_dataframe.to_sql('metadata', con=self.conn, if_exists="append", index=False)
 
 
-    def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray):
+
+    def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray, confidence_scores: float):
         """
             Write a batch of inferences to the database. Include information about the window's location in its parent image,
             as well as a reference key to the parent image in the global table.
@@ -228,6 +312,7 @@ class SlidingWindow:
             window_coord_x (int): x coordinate of the window on the parent image.
             window_coord_y (int): y coordinate of the window on the parent image.
             gloal_id (int): ID of parent image in Global table (which holds information about the image).
+            confidence_scores: Confidence scores of model inferences on windows.
         """
 
         # Get window latitude/longitude information for each window.
@@ -261,7 +346,8 @@ class SlidingWindow:
                     "minimum_longitude": min_longitudes,
                     "minimum_latitude": min_latitudes,
                     "maximum_longitude": max_longitudes,
-                    "maximum_latitude": max_latitudes
+                    "maximum_latitude": max_latitudes,
+                    "confidence_score": confidence_scores
                 },
         )
         window_dataframe.to_sql('windows', con=self.conn, if_exists="append", index=False)

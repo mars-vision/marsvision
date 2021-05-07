@@ -19,6 +19,9 @@ pytorch_cnn_parameters:
   batch_size: 4
   num_workers: 4
 
+sliding_window_parameters:
+  confidence_threshold: 0.9
+  window_output_root: "./marsvision-window-output"
 
 random_pipeline_parameters:
   window_strides:
@@ -28,6 +31,7 @@ random_pipeline_parameters:
     - 64
     - 128
     - 256
+    - 512
   window_sizes:
     - 32
     - 64
@@ -35,3 +39,4 @@ random_pipeline_parameters:
     - 256
     - 512
     - 1024
+    - 2048

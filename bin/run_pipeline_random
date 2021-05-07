@@ -50,7 +50,7 @@ def main(model_file, model_mode, num_samples, output_file = "marsvision.db"):
     for i in range(len(window_sizes)):
         window_size = window_sizes[i]
         window_stride = window_strides[i]
-        sliding_window = SlidingWindow(model, output_file, window_size, window_size, window_stride,)
+        sliding_window = SlidingWindow(model, output_file, window_size, window_size, window_stride)
         sliding_window.sliding_window_predict(image_list, random_metadata_list)
         print("Iteration {0}/{1} complete | Window size: {2}x{2} | Stride x: {3} | Stride y: {3}".format(i + 1, len(window_sizes), window_size, window_stride))
 

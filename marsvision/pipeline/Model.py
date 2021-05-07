@@ -17,6 +17,7 @@ from torchvision import transforms
 from torch import Tensor
 from torch import nn
 from torch import optim
+from torch.nn.functional import softmax
 import copy
 from torch.optim import lr_scheduler
 import matplotlib.pyplot as plt
@@ -74,19 +75,20 @@ class Model:
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
+    def predict_proba(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
         """
             Run inference using self.model on a list of images using the currently instantiated model.
             
             This model can either be an sklearn model or a pytorch model.
 
-            Returns a list of inferences.
-            
+            Returns a numpy array containing stochastic probabilities per class index for each sample.
+        
             ---
 
             Parameters:
             image_list (List[np.ndarray]): Batch of images to run inference on with this model.
             crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
+            input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension. If none, the dimension in the config file is used.
         """
 
         if self.model_type == Model.SKLEARN:
@@ -97,8 +99,8 @@ class Model:
             image_feature_list = []
             for image in image_list:
                 image_feature_list.append(FeatureExtractor.extract_features(image))
-            inference_list = self.model.predict(image_feature_list)
-            return list(map(int, inference_list))
+            distribution = self.model.predict_proba(image_feature_list)
+            return np.array(distribution)
         elif self.model_type == Model.PYTORCH:
             if input_dimension is None:
                 config_pytorch = self.config["pytorch_cnn_parameters"]
@@ -124,16 +126,32 @@ class Model:
                 img = cv2.cvtColor(image_list[i], cv2.COLOR_RGB2GRAY)
                 img_pil = Image.fromarray(img)
                 input_tensor[i] = transform(img_pil)
-
+                
             # Output index of the maximum confidence score per sample.
             # Return the output tensor as a list.
 
-            # TODO: Return confidences of predicted classes
-            # Highest confidence probabilities
-            # like sklearn predict_proba
-            return self.model(input_tensor).argmax(dim=1).tolist()
+            # Return confidence scores as a stochastic distribution over the classes.
+            # Done by applying the softmax function over the neural network's output,
+            # creating a distribution that sums to 1 with values in the range [0, 1]
+            output_tensor = self.model(input_tensor)
+            output_tensor = softmax(output_tensor, dim=1)
+            return np.array(output_tensor.detach().numpy())
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
+
+    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
+        """
+            This function serves as a wrapper for predict_proba,
+            that takes as input a batch of images and outputs a list of inferences for each image.
+
+            Parameters:
+            image_list (List[np.ndarray]): Batch of images to run inference on with this model.
+            crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
+            input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension. If None, the dimension in the config file is used.
+
+        """
+        distribution = self.predict_proba(image_list, input_dimension, transform)
+        return self.predict_proba(image_list).argmax(axis=1).tolist()
 
     def set_training_data(self, training_images: np.ndarray, training_labels: List[str]):
         """
