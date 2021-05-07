@@ -59,7 +59,7 @@ class SlidingWindow:
         if window_output_root is None:
             self.window_output_root = self.config_sliding_window["window_output_root"]
         else:
-            self.window_output_root = window_root
+            self.window_output_root = window_output_root
             
         self.window_length = window_length
         self.window_height = window_height
