@@ -18,8 +18,8 @@ class SlidingWindow:
         window_height: int = 32, 
         stride_x : int = 32, 
         stride_y: int = 32,
-        window_output_root = r"X:\marsvision_window_output5-6",
-        confidence_threshold = None):
+        window_output_root: str = None,
+        confidence_threshold: str = None):
         """
             This class is responsible for running the sliding window pipeline,
             which will run through segments of an image with a window of user specified
@@ -28,6 +28,7 @@ class SlidingWindow:
             The results of the classification, as well as window and image information,
             is stored in a SQLite database.
 
+            Windows that are scored beyond a threshold by the model will be cropped and output to an output folder. The default value can be specified in the config.yml file.
             ------
 
             Parameters:
@@ -37,26 +38,36 @@ class SlidingWindow:
             window_height (int): Height of window on the vertical axis in pixels.
             stride_x (int): Stride of window along the horizontal axis in pixels.
             stride_y (int): Stride of window along the vertical axis in pixels.
+            window_output_root (string): Root folder for the cropped output images.
+            confidence_threshold (string): Probability threshold. Images over this threshold will be cropped out and saved to the output folder.
 
         """
 
         # Open config file
+        with open(CONFIG_PATH) as yaml_cfg:
+            self.config = yaml.load(yaml_cfg)
+            self.config_sliding_window = self.config["sliding_window_parameters"]
+            
+        # Initialize variables with a default from the config file,
+        # or user specified parameter.
         if confidence_threshold is None:
-            with open(CONFIG_PATH) as yaml_cfg:
-                self.config = yaml.load(yaml_cfg)
-                self.confidence_threshold = self.config["confidence_threshold"]    
+            self.confidence_threshold = self.config_sliding_window["confidence_threshold"]
         else:
             self.confidence_threshold = confidence_threshold
-
-
+        
+        # Initialize window output root
+        if window_output_root is None:
+            self.window_output_root = self.config_sliding_window["window_output_root"]
+        else:
+            self.window_output_root = window_root
+            
         self.window_length = window_length
         self.window_height = window_height
         self.stride_x = stride_x
         self.stride_y = stride_y
         self.model = model
         self.db_path = db_path
-        self.window_output_root = window_output_root
-        
+
     def sliding_window_predict(self, image_list: np.ndarray, metadata_list):
         """
             Runs the sliding window algorithm
@@ -151,7 +162,7 @@ class SlidingWindow:
                 WHERE rowid NOT IN (
                     SELECT MIN(rowid) 
                     FROM metadata 
-                        ROUP BY product_id
+                    GROUP BY product_id
                 )
             """
         c.execute(drop_duplicate_query)
