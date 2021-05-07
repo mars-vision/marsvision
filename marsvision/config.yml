@@ -25,8 +25,16 @@ sliding_window_parameters:
 
 random_pipeline_parameters:
   window_strides:
+    - 16
+    - 32
+    - 64
     - 128
     - 256
+    - 512
   window_sizes:
-    - 511
-    - 1023
+    - 64
+    - 128
+    - 256
+    - 512
+    - 1024
+    - 2048

@@ -170,18 +170,36 @@ class SlidingWindow:
         self.conn.close()
 
     def save_high_confidence_windows(self, 
-        confidence_score_list,
-        prediction_list,
-        metadata_list, 
-        window_list, 
-        x_coord, y_coord, 
-        global_id_list, 
-        confidence_threshold = None):
+        confidence_score_list: List[int],
+        prediction_list: List[int],
+        metadata_list: List[object], 
+        window_list: np.ndarray, 
+        x_coord: int, y_coord: int, 
+        global_id_list: List[str], 
+        confidence_threshold: float = None):
+        """
+            Writes files to labelled folders.
 
+            Used to save cropped images of windows that exceed a confidence threshold.
+
+            Attached to the filenames are metadata to make identification of the parent image, pixel location,
+            latitude, and longitude possible.
+        """
+
+        # np.where returns indices for the the filter condition,
+        # Which is a confidence score of at least confidence_threshold.
+        # Iterate through these indices to produce files.
         for i in np.where(confidence_score_list > self.confidence_threshold)[0]:
             product_id = metadata_list[i].product_id.strip()
+
+            # Global id is the primary key of this window's corresponding
+            # entry in the global table (which contains records of runs of the sliding window pipeline)
             global_id = global_id_list[i]
-            filename = "{product_id}-global_id_{global_id}-x_coord_{x_coord}-y_coord_{y_coord}.png".format(
+            
+            # Puts together a filename with identifying information,
+            # allowing us to identify what image and what the coordinates
+            # of the window are.
+            filename = "{product_id}-global_id_{global_id}-pixel_coordcx_{x_coord}-pixel_coord_y_{y_coord}.png".format(
                 product_id = product_id, global_id = global_id, x_coord = x_coord, y_coord = y_coord)
 
             label = str(prediction_list[i])
