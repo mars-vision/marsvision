@@ -9,6 +9,7 @@ import yaml
 import pdsc
 from pdsc.metadata import json_dumps
 import os
+from marsvision.path_definitions import CONFIG_PATH
 
 class SlidingWindow:
     def __init__(self, model: Model, 
@@ -17,7 +18,8 @@ class SlidingWindow:
         window_height: int = 32, 
         stride_x : int = 32, 
         stride_y: int = 32,
-        window_output_root = "high_confidence_windows"):
+        window_output_root = r"X:\marsvision_window_output5-6",
+        confidence_threshold = None):
         """
             This class is responsible for running the sliding window pipeline,
             which will run through segments of an image with a window of user specified
@@ -37,6 +39,16 @@ class SlidingWindow:
             stride_y (int): Stride of window along the vertical axis in pixels.
 
         """
+
+        # Open config file
+        if confidence_threshold is None:
+            with open(CONFIG_PATH) as yaml_cfg:
+                self.config = yaml.load(yaml_cfg)
+                self.confidence_threshold = self.config["confidence_threshold"]    
+        else:
+            self.confidence_threshold = confidence_threshold
+
+
         self.window_length = window_length
         self.window_height = window_height
         self.stride_x = stride_x
@@ -128,11 +140,21 @@ class SlidingWindow:
                 # Pass the filtered list of metadata and global id's
                 confidence_score_list = self.model.predict_proba(window_list).max(axis = 1)
                 prediction_list = self.model.predict(window_list)
-                self.save_high_confidence_windows(confidence_score_list, prediction_list, metadata_filtered_list, window_list, x, y, global_id_filtered_list, .8)
+                self.save_high_confidence_windows(confidence_score_list, prediction_list, metadata_filtered_list, window_list, x, y, global_id_filtered_list)
                 self.write_window_to_sql(prediction_list, metadata_filtered_list, x, y, global_id_filtered_list, confidence_score_list)
 
-                
-
+               
+        # Drop duplicate metadata entries here
+        # Not the cleanest way of doing this...
+        drop_duplicate_query = """
+                DELETE FROM metadata
+                WHERE rowid NOT IN (
+                    SELECT MIN(rowid) 
+                    FROM metadata 
+                        ROUP BY product_id
+                )
+            """
+        c.execute(drop_duplicate_query)
         # We're done with the database by this point, so close the connection 
         self.conn.close()
 
@@ -145,7 +167,7 @@ class SlidingWindow:
         global_id_list, 
         confidence_threshold = None):
 
-        for i in np.where(confidence_score_list > confidence_threshold)[0]:
+        for i in np.where(confidence_score_list > self.confidence_threshold)[0]:
             product_id = metadata_list[i].product_id.strip()
             global_id = global_id_list[i]
             filename = "{product_id}-global_id_{global_id}-x_coord_{x_coord}-y_coord_{y_coord}.png".format(
@@ -179,7 +201,7 @@ class SlidingWindow:
         """
         c = self.conn.cursor()
         c.execute(sql)
-                    
+
     def write_global_to_sql(self, metadata_list):
 
         """
@@ -244,6 +266,7 @@ class SlidingWindow:
 
         # Write to the metadata table.
         metadata_dataframe.to_sql('metadata', con=self.conn, if_exists="append", index=False)
+
 
 
     def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray, confidence_scores: float):
