@@ -117,8 +117,8 @@ class SlidingWindow:
         # Handle images of different sizes by 
         # sliding the window over the dimensions of the largest image,
         # and checking if the same window is valid for smaller images.
-        for y in range(0, max_width, self.stride_x):
-            for x in range(0, max_height, self.stride_y):
+        for y in range(0, max_height, self.stride_x):
+            for x in range(0, max_width, self.stride_y):
                 window_list = []
                 metadata_filtered_list = []
                 global_id_filtered_list = []

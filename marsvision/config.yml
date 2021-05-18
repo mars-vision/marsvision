@@ -21,11 +21,10 @@ pytorch_cnn_parameters:
 
 sliding_window_parameters:
   confidence_threshold: 0.9
-  window_output_root: "X:/marsvision-window-output5-10-2"
+  window_output_root: "X:/marsvision-window-output5-12"
 
 random_pipeline_parameters:
   window_strides:
-    - 8
     - 16
     - 32
     - 64
@@ -33,7 +32,6 @@ random_pipeline_parameters:
     - 256
     - 512
   window_sizes:
-    - 32
     - 64
     - 128
     - 256
