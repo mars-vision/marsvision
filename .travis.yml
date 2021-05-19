@@ -12,11 +12,12 @@ install:
   - conda info -a
   - chmod +x install_env.sh
   - ./install_env.sh
+  - ./install_pdsc.sh
 # command to run tests
 script:
   - source activate marsvision
   - python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning --ignore pdsc
-  - mypy -p marsvision
+  - bnhbnvv
   - cd docs
   - make html
   - cd ..
