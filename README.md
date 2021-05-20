@@ -34,10 +34,13 @@ The code to train a model looks like this:
 from marsvision.pipeline import Model
 
 from marsvision.vision import ModelDefinitions
+
 alex_model = ModelDefinitions.alexnet_grayscale()
+
 model = Model(alex_model, "pytorch", 
               dataset_root_directory=r"/content/hirise-map-proj"
              )
+
 test_results = model.train_and_test_pytorchcnn()
 </code>
 
@@ -51,6 +54,7 @@ To write the trained CNN and evaluation results to a file, run the following cod
 
 <code>
 model.save_model("MarsVisionSampleCNN.pt")
+
 model.save_results("MarsVisionSampleResults.p")
 </code>
 
