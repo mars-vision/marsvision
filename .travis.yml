@@ -11,6 +11,7 @@ install:
   - conda update -q conda
   - conda info -a
   - chmod +x install_env.sh
+  - chmod +x install_pdsc.sh
   - ./install_env.sh
   - ./install_pdsc.sh
 # command to run tests
