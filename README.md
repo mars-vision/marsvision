@@ -20,9 +20,9 @@ Definitions for Pytorch datasets and models are in the vision directory. Noteboo
 -----
 ## Installation
 
-Clone the directory and run this command to set up the PDSC tables:
+Clone the directory and run this command to set up a conda environment and the PDSC package:
 
-<code>./install_pdsc.sh</code>
+<code>./install_env.sh</code>
 
 ----
 ## Training a CNN
