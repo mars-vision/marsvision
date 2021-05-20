@@ -34,19 +34,14 @@ class Model:
         model_type: str = PYTORCH,
         **kwargs):
         """
-            Model class that serves as an abstract wrapper for either an sklearn or pytorch model.
+        Model class that serves as an abstract wrapper for either an sklearn or pytorch model. Contains methods for making predictions, and for cross validating the model and writing results to a file.
 
-            Contains methods for making predictions, and for cross validating the model and writing results to a file.
-            --------
-            
-            Parameters:
-
+        Parameters
             model: Either an sklearn machine learning model, or a pytorch neural network. Can be a path to a file or a model object.
-
+            
             model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.
 
-
-            **kwargs:
+        kwargs:
             training_images (numpy.ndarray): Batch of images to train on 
             training_labels: Class labels for the training images
             dataset_root_directory: The root directory of the Deep Mars dataset to train on.
@@ -77,17 +72,17 @@ class Model:
 
     def predict_proba(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
         """
-            Run inference using self.model on a list of images using the currently instantiated model.
+        Run inference using self.model on a list of images using the currently instantiated model.
             
-            This model can either be an sklearn model or a pytorch model.
+        This model can either be an sklearn model or a pytorch model.
 
-            Returns a numpy array containing stochastic probabilities per class index for each sample.
+        Returns a numpy array containing stochastic probabilities per class index for each sample.
         
-            ---
-
-            Parameters:
+        Parameters
             image_list (List[np.ndarray]): Batch of images to run inference on with this model.
+            
             crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
+            
             input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension. If none, the dimension in the config file is used.
         """
 
@@ -144,10 +139,14 @@ class Model:
             This function serves as a wrapper for predict_proba,
             that takes as input a batch of images and outputs a list of inferences for each image.
 
-            Parameters:
-            image_list (List[np.ndarray]): Batch of images to run inference on with this model.
-            crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
-            input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension. If None, the dimension in the config file is used.
+            ----------
+
+            Parameters
+                image_list (List[np.ndarray]): Batch of images to run inference on with this model. 
+                
+                crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
+                
+                input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension. If None, the dimension in the config file is used.
 
         """
         distribution = self.predict_proba(image_list, input_dimension, transform)
@@ -157,12 +156,11 @@ class Model:
         """
             Setter for training image data.
 
-            ---
+            ----------
 
-            Parameters: 
-
-            training_images (self): List of images to train the model on. Numpy is expected to be as follows: (image count, height, image width, channels)
-            training_labels (self): Labels associated with training images. Should be a list parallel to the list of training images.
+            Parameters
+                training_images (self): List of images to train the model on. Numpy is expected to be as follows: (image count, height, image width, channels)
+                training_labels (self): Labels associated with training images. Should be a list parallel to the list of training images.
 
         """
         self.training_images = training_images
@@ -186,12 +184,11 @@ class Model:
             Run cross validation on a binary classification problem,
             and make a matplotlib plot of the results.
 
-            ---
-            
-            Parameters
+            ----------
 
-            Title(str): Title of the figure.
-            n_folds(int): Number of folds.
+            Parameters
+                Title(str): Title of the figure.
+                n_folds(int): Number of folds.
         """
 
         fig, ax = plt.subplots()
@@ -234,11 +231,11 @@ class Model:
             This method assumes that there are only two labels in the training label member of this class.
 
             --------
-            
-            Parameters:
 
-            n_dolfds (int): Number of folds.
-            ax: Matplotlib axis on which to show the plot.
+            Parameters
+                n_folds (int): Number of folds.
+                
+                ax: Matplotlib axis on which to show the plot.
 
         """
 
@@ -302,15 +299,12 @@ class Model:
         """
             Run cross validation on the model with its training data and labels. Return the results.
 
-            --------
-            
-            Parameters:
+            ----------
 
-            scoring (list): List of sklearn cross validation scoring identifiers. 
-            Default: ["accuracy", "precision", "recall", "roc_auc"]. Assumes binary classification.
-            Valid IDs are SKLearn classification identifiers.
-            https://scikit-learn.org/stable/modules/model_evaluation.html
-            n_folds (int): Number of cross validation folds. Default 10.
+            Parameters
+                scoring (list): List of sklearn cross validation scoring identifiers. Default: ["accuracy", "precision", "recall", "roc_auc"]. Assumes binary classification. Valid IDs are SKLearn classification identifiers. https://scikit-learn.org/stable/modules/model_evaluation.html
+            
+                n_folds (int): Number of cross validation folds. Default 10.
 
         """
 
@@ -340,9 +334,8 @@ class Model:
             Save cross validation results to a file. Shows results for individual folds, and the mean result for all folds,
             for all user specified classification metrics.
 
-            -----
-            Parameters:
-            output_path (str): Path and file to write the results to.
+            Parameters
+                output_path (str): Path and file to write the results to.
 
         """
         output_file = open(output_path, "w")
@@ -358,11 +351,8 @@ class Model:
             
             Either an SKLearn or Pytorch model will be trained on this object's data. The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module. The Pytorch model will be trained by running a CNN on the image data.
         
-            -----
-            
-            Parameters:
-
-            root_dir (str): Root directory of the Deep Mars dataset.
+            Parameters
+                root_dir (str): Root directory of the Deep Mars dataset.
         """
 
         if self.model_type == Model.PYTORCH:   
@@ -397,14 +387,15 @@ class Model:
 
             The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the config file.
 
-            ----
 
-            Parameters:
-
-            root_dir (str): Path to the Deep Mars dataset.
-            out_path: (str): The directory to which files should be saved.
-            num_epochs (int): Named parameter. Number of training epochs. Default values are located in the config file.
-            test_proportion (float): Named parameter. Proportion of data to be used for model evaluation. Expected to be a value in range [0, 1]. The complement (1 - test_proportion) is used to train the model.
+            Parameters
+                root_dir (str): Path to the Deep Mars dataset.
+                
+                out_path: (str): The directory to which files should be saved.
+                
+                num_epochs (int): Named parameter. Number of training epochs. Default values are located in the config file.
+                
+                test_proportion (float): Named parameter. Proportion of data to be used for model evaluation. Expected to be a value in range [0, 1]. The complement (1 - test_proportion) is used to train the model.
 
 
         """
@@ -576,7 +567,12 @@ class Model:
 
     def save_cnn_evaluation_results(self, out_path: str = "marsvision_cnn_evaluation.p"):
         """ 
-            Helper function that saves the evaluation results of CNN training.
+            Helper function that saves the evaluation results of CNN training as a pickle (.p) file.
+
+            ----------
+
+            Parameters
+                out_path (str): File path for the output Pickle file.
         """
         with open(out_path, "wb") as out_file:
             pickle.dump(self.cnn_evaluation_results, out_file)
@@ -588,8 +584,8 @@ class Model:
 
             -------
 
-            Parameters:
-            out_path (str): The output location for the file.
+            Parameters
+                out_path (str): The output location for the file.
         """
 
         if self.model_type == Model.SKLEARN:
@@ -607,10 +603,9 @@ class Model:
 
             -------
 
-            Parameters:
-
-            out_path(str): The input location of the file to be read.
-            model_type(str): The model type. Either "sklearn" or "pytorch".
+            Parameters
+                out_path(str): The input location of the file to be read.
+                model_type(str): The model type. Either "sklearn" or "pytorch".
         """
 
         self.model_type = model_type
@@ -635,17 +630,17 @@ class Model:
 
             Produces a dataframe containing rows of evaluation metrics.
 
-            Each row is an epoch, and each column is a different metirc.
+            Each row is an epoch, and each column is a different metric.
 
-            Metrics included are:
+            Metrics:
                 Accuracy
+
                 Precision (OVA per class)
+
                 Recall (OVA per class)
 
-            ------
-
-            Parameters:
-            training_file (str): Path to the evaluation results file.
+            Parameters
+                training_file (str): Path to the evaluation results file.
         """
 
         cnn_training_results = pickle.load(open(training_file, "rb"))

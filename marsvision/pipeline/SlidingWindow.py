@@ -29,17 +29,21 @@ class SlidingWindow:
             is stored in a SQLite database.
 
             Windows that are scored beyond a threshold by the model will be cropped and output to an output folder. The default value can be specified in the config.yml file.
-            ------
 
             Parameters:
+                db_path (str): File path of SQLite .db file.
 
-            db_path (str): File path of SQLite .db file.
-            window_length (int): Length of window on the horizontal axis in pixels.
-            window_height (int): Height of window on the vertical axis in pixels.
-            stride_x (int): Stride of window along the horizontal axis in pixels.
-            stride_y (int): Stride of window along the vertical axis in pixels.
-            window_output_root (string): Root folder for the cropped output images.
-            confidence_threshold (string): Probability threshold. Images over this threshold will be cropped out and saved to the output folder.
+                window_length (int): Length of window on the horizontal axis in pixels.
+                
+                window_height (int): Height of window on the vertical axis in pixels.
+                
+                stride_x (int): Stride of window along the horizontal axis in pixels.
+                
+                stride_y (int): Stride of window along the vertical axis in pixels.
+                
+                window_output_root (string): Root folder for the cropped output images.
+                
+                confidence_threshold (string): Probability threshold. Images over this threshold will be cropped out and saved to the output folder.
 
         """
 
@@ -75,12 +79,10 @@ class SlidingWindow:
             
             Store the results in the SQLite database.
 
-            -----
-
             Parameters
-
-            image_list (numpy.ndarray): Image data represented as a numpy.ndarray.
-            metadata_list: List of PDSC metadata objects.
+                image_list (numpy.ndarray): Image data represented as a numpy.ndarray.
+                
+                metadata_list: List of PDSC metadata objects.
 
         """
 
@@ -166,13 +168,12 @@ class SlidingWindow:
         self.conn.close()
 
     def save_high_confidence_windows(self, 
-        confidence_score_list: List[int],
+        confidence_score_list: List[float],
         prediction_list: List[int],
         metadata_list: List[object], 
         window_list: np.ndarray, 
         x_coord: int, y_coord: int, 
-        global_id_list: List[str], 
-        confidence_threshold: float = None):
+        global_id_list: List[str]):
         """
             Writes files to labelled folders.
 
@@ -182,6 +183,21 @@ class SlidingWindow:
 
             Attached to the filenames are metadata to make identification of the parent image, pixel location,
             latitude, and longitude possible.
+
+            Parameters 
+                confidence_score_list: List[float]. List of confidence scores from a batch of inferences.
+                
+                prediction_list: List[int]. List of inference indeces from a batch of windows.
+                
+                metadata_list: List[metadata]. List of PDSC metadata objects for the parent images of the batch of windows.
+                
+                window_list: np.ndarray. Image data from the batch of windows. Shape (n_samples, height, width, channels)
+                
+                x_coord: int. Left pixel coordinate of window on parent image.
+                
+                y_coord: int. Top pixel coordinate of window on parent image.
+                
+                global_id_list: List[str]. List of global id's from the corresponding global entry in the global database table.
         """
 
         # np.where returns indices for the the filter condition,
@@ -242,12 +258,9 @@ class SlidingWindow:
             over a particular image.
            
             This data includes the stride, window dimensions, and metadata associated with the particular image.
-
-            -----
-
-            Parameters
             
-            metdata_list (List[str]): List of PDSC metadata objects. Can be used to derive the observation ID and product ID.
+            Parameters
+                metadata_list (List[str]): List of PDSC metadata objects. Can be used to derive the observation ID and product ID.
         """
 
         # Observation IDs are not unique as observations product multiple files,
@@ -281,6 +294,10 @@ class SlidingWindow:
             Write image metadata to a separate table.
 
             This is the metadata associated with the images via the PDSC api.
+
+            Parameters
+                metadata_list (List[str]): List of PDSC metadata objects. Can be used to derive the observation ID and product ID.
+
         """
         # json_dumps is part of the pdsc API. Parses a PDSC metadata object to JSON format.
         metadata_dataframe = pd.read_json(json_dumps(metadata_list))
@@ -305,14 +322,16 @@ class SlidingWindow:
             Write a batch of inferences to the database. Include information about the window's location in its parent image,
             as well as a reference key to the parent image in the global table.
 
-            ----
-
             Parameters
-            prediction_list (np.ndarray): Batch of label inferences from the model.
-            window_coord_x (int): x coordinate of the window on the parent image.
-            window_coord_y (int): y coordinate of the window on the parent image.
-            gloal_id (int): ID of parent image in Global table (which holds information about the image).
-            confidence_scores: Confidence scores of model inferences on windows.
+                prediction_list (np.ndarray): Batch of label inferences from the model.
+
+                window_coord_x (int): x coordinate of the window on the parent image.
+
+                window_coord_y (int): y coordinate of the window on the parent image.
+
+                gloal_id (int): ID of parent image in Global table (which holds information about the image).
+                
+                confidence_scores: Confidence scores of model inferences on windows.
         """
 
         # Get window latitude/longitude information for each window.
