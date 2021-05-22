@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>marsvision.utilities.DataLoader module &mdash; marsvision 0.1.0 documentation</title>
+  <title>marsvision.utilities.DataUtility module &mdash; marsvision 0.1.0 documentation</title>
   
 
   
@@ -27,9 +27,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="marsvision.vision package" href="marsvision.vision.html" />
-    <link rel="prev" title="marsvision.utilities package" href="marsvision.utilities.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -129,10 +127,13 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.pipeline.html">marsvision.pipeline package</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="marsvision.utilities.html">marsvision.utilities package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="marsvision.vision.html">marsvision.vision package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="marsvision.config_path.html">marsvision.config_path module</a></li>
 </ul>
 
             
@@ -175,9 +176,7 @@
       </li>
 
         
-          <li><a href="marsvision.utilities.html">marsvision.utilities package</a> &gt;</li>
-        
-      <li>marsvision.utilities.DataLoader module</li>
+      <li>marsvision.utilities.DataUtility module</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -206,15 +205,15 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" class="pytorch-article">
               
-  <div class="section" id="module-marsvision.utilities.DataLoader">
-<span id="marsvision-utilities-dataloader-module"></span><h1>marsvision.utilities.DataLoader module<a class="headerlink" href="#module-marsvision.utilities.DataLoader" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="marsvision.utilities.DataLoader.DataLoader">
-<em class="property">class </em><code class="sig-prename descclassname">marsvision.utilities.DataLoader.</code><code class="sig-name descname">DataLoader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader" title="Permalink to this definition">¶</a></dt>
+  <div class="section" id="marsvision-utilities-datautility-module">
+<h1>marsvision.utilities.DataUtility module<a class="headerlink" href="#marsvision-utilities-datautility-module" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-marsvision.utilities.DataUtility"></span><dl class="py class">
+<dt id="marsvision.utilities.DataUtility.DataUtility">
+<em class="property">class </em><code class="sig-prename descclassname">marsvision.utilities.DataUtility.</code><code class="sig-name descname">DataUtility</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataUtility.DataUtility" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
-<dt id="marsvision.utilities.DataLoader.DataLoader.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.__init__" title="Permalink to this definition">¶</a></dt>
+<dt id="marsvision.utilities.DataUtility.DataUtility.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataUtility.DataUtility.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class is responsible for loading images from an input directory,
 extracting features from them, and outputting the processed data as a .csv file.</p>
 <p>A class parameter can be used to classify all images within the input folder.</p>
@@ -233,8 +232,8 @@ extracting features from them, and outputting the processed data as a .csv file.
 </dd></dl>
 
 <dl class="py method">
-<dt id="marsvision.utilities.DataLoader.DataLoader.data_reader">
-<code class="sig-name descname">data_reader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.data_reader" title="Permalink to this definition">¶</a></dt>
+<dt id="marsvision.utilities.DataUtility.DataUtility.data_reader">
+<code class="sig-name descname">data_reader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataUtility.DataUtility.data_reader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Walk through a folder and load images, file names, and folder names into memory
 as member variables.</p>
 <p>All .jpg images in the working directory,
@@ -243,8 +242,8 @@ and all subdirectories are loaded.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="marsvision.utilities.DataLoader.DataLoader.data_transformer">
-<code class="sig-name descname">data_transformer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.data_transformer" title="Permalink to this definition">¶</a></dt>
+<dt id="marsvision.utilities.DataUtility.DataUtility.data_transformer">
+<code class="sig-name descname">data_transformer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataUtility.DataUtility.data_transformer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the FeatureExtractor module to load
 a vector of features into memory as a member variable.</p>
 <p>Creates a Pandas dataframe from the extracted features, and write the data to a .csv file (“output.csv”),
@@ -256,14 +255,14 @@ If file names are desired, file names are written to a file_name column.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="marsvision.utilities.DataLoader.DataLoader.data_writer">
-<code class="sig-name descname">data_writer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.data_writer" title="Permalink to this definition">¶</a></dt>
+<dt id="marsvision.utilities.DataUtility.DataUtility.data_writer">
+<code class="sig-name descname">data_writer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataUtility.DataUtility.data_writer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the constructed dataframe to an output file (“output.csv”)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="marsvision.utilities.DataLoader.DataLoader.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataLoader.DataLoader.run" title="Permalink to this definition">¶</a></dt>
+<dt id="marsvision.utilities.DataUtility.DataUtility.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#marsvision.utilities.DataUtility.DataUtility.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>When called, run() will execute the data_reader(), data_transformer(), and data_writer() 
 functions in order.</p>
 <p>The result will be an output .csv file either in the directory from which the script is run,
@@ -300,7 +299,7 @@ or in the user specified directory.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">marsvision.utilities.DataLoader module</a></li>
+<li><a class="reference internal" href="#">marsvision.utilities.DataUtility module</a></li>
 </ul>
 
             </div>

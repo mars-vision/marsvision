@@ -1,0 +1,42 @@
+dataset:
+  dataset_root_directory: null
+
+training_options:
+  # Set this to 'pytorch' or 'sklearn'
+  train_mode: pytorch
+
+
+pytorch_cnn_parameters:
+  num_epochs: 5
+  gradient_descent_learning_rate: 0.0001
+  gradient_descent_momentum: 0.9
+  scheduler_gamma: 0.1
+  scheduler_step_size: 7
+  test_proportion: 0.2
+  num_output_classes: 7
+  input_dimension: 227
+  crop_dimension: 256
+  batch_size: 4
+  num_workers: 4
+
+sliding_window_parameters:
+  confidence_threshold: 0.9
+  window_output_root: "./marsvision-window-output"
+
+random_pipeline_parameters:
+  window_strides:
+    - 8
+    - 16
+    - 32
+    - 64
+    - 128
+    - 256
+    - 512
+  window_sizes:
+    - 32
+    - 64
+    - 128
+    - 256
+    - 512
+    - 1024
+    - 2048

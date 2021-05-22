@@ -7,8 +7,9 @@ __pycache__/
 
 # Data
 mars-dataset/
-Prototyping/Data
+Prototyping/pytorch-eval
 test/test_files/marsvision.db
+pdsc/pdsc_tables
 
 
 #VSCode
@@ -30,3 +31,18 @@ test/test_files/marsvision.db
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+
+# Pytorch and pickle files (.pt and p)
+*.p
+*.pt
+
+# PDSC Library and table files
+*.LBL
+*.TAB
+
+# PDSC Directory
+pdsc/pdsc_tables/
+
+# VSCpde stiff
+.vscode/settings.json
