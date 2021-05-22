@@ -8,7 +8,7 @@ marsvision
 
 ----- 
 ## Overview
-MarsVision is an open source computer vision package containing tools for training and  evaluating Scikit-Learn models and PyTorch CNN models. We implemented a sliding window pipeline, where we can run a sliding window across images for classification of images from PDS.
+MarsVision is an open source computer vision package containing tools for training and  evaluating Scikit-Learn models and PyTorch CNN models. We implemented a sliding window pipeline, where we can run a sliding window across images for classification of HiRISE images of the surface of Mars.
 
 This package makes use of the PDSC: Planetary Data System Coincidences package to retrieve metadata (e.g. latitudes, longitudes) for classified windows.
 
