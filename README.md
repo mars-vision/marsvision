@@ -30,19 +30,15 @@ This package was written to work with the Deep Mars dataset available (here), th
 
 The code to train a model looks like this:
 
-<code>
+```
 from marsvision.pipeline import Model
-
 from marsvision.vision import ModelDefinitions
-
 alex_model = ModelDefinitions.alexnet_grayscale()
-
 model = Model(alex_model, "pytorch", 
               dataset_root_directory=r"/content/hirise-map-proj"
              )
-
 test_results = model.train_and_test_pytorchcnn()
-</code>
+```
 
 Where the root directory is the path to the DeepMars dataset. The definitions for the Dataset class and the model class are the vision folder.
 
@@ -52,11 +48,10 @@ Hyparameters such as number of epochs and learning rate are in the config file.
 
 To write the trained CNN and evaluation results to a file, run the following code:
 
-<code>
+```
 model.save_model("MarsVisionSampleCNN.pt")
-
 model.save_results("MarsVisionSampleResults.p")
-</code>
+```
 
 ----
 ## Running the sliding window pipeline with a trained model
