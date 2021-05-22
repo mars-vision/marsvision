@@ -26,7 +26,7 @@ Clone the directory and run this command to set up a conda environment and the P
 
 ----
 ## Training a CNN
-This package was written to work with the Deep Mars dataset available (here), though the pytorch code in the model class can be extended to work with any dataset.
+This package was written to work with the Deep Mars dataset [from this paper](https://www.aaai.org/ocs/index.php/AAAI/AAAI18/paper/download/16040/16400), though the pytorch code in the model class can be extended to work with any dataset.
 
 The code to train a model looks like this:
 
