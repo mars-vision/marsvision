@@ -18,6 +18,13 @@ This package makes use of the PDSC: Planetary Data System Coincidences package t
 Definitions for Pytorch datasets and models are in the vision directory. Notebooks from our model training and evaluations are in the prototyping directory.
 
 -----
+
+
+Documentation
+-------------
+
+The documentation for ``marsvision`` is available [here](https://mars-vision.github.io/marsvision/build/index.html).
+
 ## Installation
 
 Clone the directory and run this command to set up a conda environment and the PDSC package:
@@ -25,6 +32,7 @@ Clone the directory and run this command to set up a conda environment and the P
 <code>./install_env.sh</code>
 
 ----
+
 ## Training a CNN
 This package was written to work with the Deep Mars dataset [from this paper](https://www.aaai.org/ocs/index.php/AAAI/AAAI18/paper/download/16040/16400), though the pytorch code in the model class can be extended to work with any dataset.
 
@@ -73,10 +81,4 @@ The arguments are as follows:
 
 -m: Set this to either "pytorch" or "sklearn" depending on the type of model being passed to the script.
 
----
 
-
-Documentation
--------------
-
-The documentation for ``marsvision`` is available [here](https://mars-vision.github.io/marsvision/build/index.html).
