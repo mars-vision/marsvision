@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: Marsvision Main Tests
 
 on: [push]
 
@@ -38,6 +38,7 @@ jobs:
         pip install pytorch_sphinx_theme
         pip install mypy
         pip install exif
+        pip install pyyaml==5.4.1
     - name: PDSC
       run: |
         pip install pdsc
