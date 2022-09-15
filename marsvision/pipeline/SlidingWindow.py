@@ -285,6 +285,7 @@ class SlidingWindow:
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
 
     def get_coordinates_from_metadata(self, metadata, pixel_coord_x, pixel_coord_y):
+        metadata.map_projection_type = metadata.map_projection_type.strip()
         rdr_localizer = pdsc.get_localizer(metadata)
         latlong = rdr_localizer.pixel_to_latlon(pixel_coord_y, pixel_coord_x)
         return latlong
