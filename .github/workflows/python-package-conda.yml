@@ -34,7 +34,6 @@ jobs:
       run: |
         conda install flake8
         conda install -y --quiet --yes pytest pytest-cov
-        conda clean -tipsy
         pip install coveralls
         pip install sphinx
         pip install pytorch_sphinx_theme
