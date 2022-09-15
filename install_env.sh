@@ -13,8 +13,7 @@ pip install pytorch_sphinx_theme
 pip install opencv-python
 pip install mypy
 pip install exif
-cd pdsc
-pip install .
+pip install pdsc
 mkdir pdsc_tables
 cd pdsc_tables
 curl https://hirise-pds.lpl.arizona.edu/PDS/INDEX/RDRCUMINDEX.TAB -o RDRCUMINDEX.TAB
