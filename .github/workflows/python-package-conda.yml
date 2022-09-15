@@ -27,7 +27,6 @@ jobs:
         conda install -y --quiet --yes pillow tensorboard scikit-learn
         conda install -y --quiet --yes mypy scipy matplotlib
         conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
-        conda clean -tipsy
         pip install pytorch-lightning
         pip install opencv-python
     - name: General Codebase Packages
