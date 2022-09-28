@@ -18,6 +18,7 @@ dependencies:
     - pdsc
     - Pillow
     - pytorch-sphinx-theme
+    - pylint
     - pytest
     - pytest-cov
     - Sphinx
