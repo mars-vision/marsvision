@@ -44,7 +44,7 @@ def main(model_file, model_mode, num_samples, output_file="marsvision.db"):
     image_list = get_images_from_metadata(random_metadata_list)
 
     # Initialize the model
-    model = Model(model_file, model_mode)
+    model = Model(model_file, model_mode, "../data/binary_test_config.yml")
 
     # Run the sliding window pipeline on all of the window sizes specified in the pipeline.
     # In the config file, we specify a list of sizes, 

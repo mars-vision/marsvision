@@ -9,13 +9,13 @@ import pdsc
 import yaml
 from pdsc.metadata import json_dumps
 
-from marsvision.path_definitions import CONFIG_PATH
 from marsvision.pipeline.Model import Model
 
 
 class SlidingWindow:
     def __init__(self, model: Model,
-                 db_path: str = "marsvision.db",
+                 db_path: str = "data/marsvision.db",
+                 config_path: str = "data/deepmars_config.yml",
                  window_length: int = 32,
                  window_height: int = 32,
                  stride_x: int = 32,
@@ -30,7 +30,7 @@ class SlidingWindow:
             The results of the classification, as well as window and image information,
             is stored in a SQLite database.
 
-            Windows that are scored beyond a threshold by the model will be cropped and output to an output folder. The default value can be specified in the config.yml file.
+            Windows that are scored beyond a threshold by the model will be cropped and output to an output folder. The default value can be specified in the deepmars_config.yml file.
 
             Parameters:
                 db_path (str): File path of SQLite .db file.
@@ -50,7 +50,7 @@ class SlidingWindow:
         """
 
         # Open config file
-        with open(CONFIG_PATH) as yaml_cfg:
+        with open(config_path) as yaml_cfg:
             self.config = yaml.safe_load(yaml_cfg)
             self.config_sliding_window = self.config["sliding_window_parameters"]
 
@@ -145,15 +145,16 @@ class SlidingWindow:
                 if len(window_list) == 0:
                     continue
 
+                windows = np.array(window_list)
                 # Predict with model, store image coordinates of window in database
                 # Write the window to a SQL table.
                 # Pass the filtered list of metadata and global id's
-                confidence_score_list = self.model.predict_proba(window_list).max(axis=1)
-                prediction_list = self.model.predict(window_list)
-                self.save_high_confidence_windows(confidence_score_list, prediction_list, metadata_filtered_list,
-                                                  window_list, x, y, global_id_filtered_list)
-                self.write_window_to_sql(prediction_list, metadata_filtered_list, x, y, global_id_filtered_list,
-                                         confidence_score_list)
+                confidence_scores = self.model.predict_proba(windows).max(axis=1)
+                predictions = self.model.predict(windows)
+                self.save_high_confidence_windows(confidence_scores, predictions, metadata_filtered_list,
+                                                  windows, x, y, global_id_filtered_list)
+                self.write_window_to_sql(predictions, metadata_filtered_list, x, y, global_id_filtered_list,
+                                         confidence_scores)
 
         # Drop duplicate metadata entries here
         # Not the cleanest way of doing this...
@@ -170,8 +171,8 @@ class SlidingWindow:
         self.conn.close()
 
     def save_high_confidence_windows(self,
-                                     confidence_score_list: List[float],
-                                     prediction_list: List[int],
+                                     confidence_score_list: np.ndarray,
+                                     prediction_list: np.ndarray,
                                      metadata_list: List[object],
                                      window_list: np.ndarray,
                                      x_coord: int, y_coord: int,
@@ -320,8 +321,8 @@ class SlidingWindow:
         # Write to the metadata table.
         metadata_dataframe.to_sql('metadata', con=self.conn, if_exists="append", index=False)
 
-    def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int,
-                            global_id_list: np.ndarray, confidence_scores: float):
+    def write_window_to_sql(self, prediction_list: np.ndarray, metadata_list, window_coord_x: int, window_coord_y: int,
+                            global_id_list: List, confidence_scores: np.ndarray):
         """
             Write a batch of inferences to the database. Include information about the window's location in its parent image,
             as well as a reference key to the parent image in the global table.

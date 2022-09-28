@@ -12,6 +12,7 @@ dependencies:
     - coveralls
     - matplotlib
     - mypy
+    - types-PyYAML
     - opencv-python
     - pandas
     - pdsc

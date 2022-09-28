@@ -2,12 +2,26 @@ import os
 from unittest import TestCase
 
 import numpy as np
+import pandas as pd
+import yaml
 from pandas._testing import assert_frame_equal
 from sklearn.linear_model import LogisticRegression
+import torch
+from torch import nn
 
 from marsvision.pipeline.Model import Model
 from marsvision.utilities import DataUtility
-from marsvision.vision.ModelDefinitions import alexnet_grayscale
+
+
+def alexnet_grayscale(config):
+    num_classes = config["pytorch_cnn_parameters"]["num_output_classes"]
+    alexnet_model = torch.hub.load('pytorch/vision:v0.6.0', 'alexnet', pretrained=True)
+    # Modify some of the layers to support a grayscale image.
+    # Also bring down the number of connections in the classifier to support fewer output classes.
+    alexnet_model.features[0] = nn.Conv2d(1, 64, kernel_size=(11, 11), stride=(4, 4), padding=(2, 2))
+    alexnet_model.classifier[4] = nn.Linear(4096, 1024)
+    alexnet_model.classifier[6] = nn.Linear(1024, num_classes)
+    return alexnet_model
 
 
 class TestModel(TestCase):
@@ -25,12 +39,19 @@ class TestModel(TestCase):
         self.training_images = self.DataUtility.images
         self.labels = [1 if name == "dust" else 0 for name in self.DataUtility.labels]
         self.sklearn_logistic_regression = LogisticRegression()
-        self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", training_images=self.training_images,
+        self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", "data/binary_test_config.yml",
+                                   training_images=self.training_images,
                                    training_labels=self.labels)
         self.model_sklearn.train_model()
 
+        config_path = "data/deepmars_config.yml"
+        with open(config_path) as yaml_cfg:
+            config = yaml.safe_load(yaml_cfg)
+
         self.deepmars_test_path = os.path.join(self.current_dir, "deep_mars_test_data")
-        self.model_pytorch = Model(alexnet_grayscale(), "pytorch", dataset_root_directory=self.deepmars_test_path)
+        self.model_pytorch = Model(alexnet_grayscale(config),
+                                   "pytorch", config_path,
+                                    dataset_root_directory=self.deepmars_test_path)
 
     def test_save_load_inference(self):
         # Make a prediction on an image, 
@@ -41,7 +62,7 @@ class TestModel(TestCase):
         predict_image = self.DataUtility.images[0]
         expected_prediction = self.model_sklearn.predict(predict_image)
         self.model_sklearn.save_model("model.p")
-        test_model = Model("model.p", "sklearn")
+        test_model = Model("model.p", "sklearn", "data/binary_test_config.yml")
         os.remove("model.p")
         test_prediction = test_model.predict(predict_image)
         self.assertEqual(test_prediction[0], expected_prediction[0])
@@ -71,7 +92,7 @@ class TestModel(TestCase):
 
     def test_cross_validate_plot(self):
         # Run the binary cross validation routine to validate it in this test
-        self.model_sklearn.cross_validate_plot(2)
+        self.model_sklearn.cross_validate_plot(title="Binary Cross Validation Results", n_folds=2, show=False)
 
     def test_pytorch_training(self):
         # Run the pytorch training method to cover it.
@@ -80,7 +101,8 @@ class TestModel(TestCase):
 
         # Test the load_model method for a pytorch model.
         # load_model is called internally when a path to the model is provided.
-        testing_model = Model(os.path.join(self.test_files_path, "marsvision_cnn.pt"), "pytorch")
+        testing_model = Model(os.path.join(self.test_files_path, "marsvision_cnn.pt"), "pytorch",
+                              "data/binary_test_config.yml")
 
         os.remove(os.path.join(self.test_files_path, "marsvision_cnn.pt"))
         os.remove(os.path.join(self.test_files_path, "marsvision_cnn_evaluation.p"))
@@ -94,8 +116,6 @@ class TestModel(TestCase):
         pytorch_predict = self.model_pytorch.predict(self.DataUtility.images)
         sklearn_predict = self.model_sklearn.predict(self.DataUtility.images)
         self.assertEqual(len(pytorch_predict), len(sklearn_predict))
-        self.assertTrue(all(isinstance(x, int) for x in pytorch_predict))
-        self.assertTrue(all(isinstance(x, int)) for x in sklearn_predict)
 
     def test_get_evaluation_dataframe(self):
         # Test static method that parses training output into a dataframe.

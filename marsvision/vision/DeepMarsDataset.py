@@ -5,13 +5,11 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from marsvision.path_definitions import CONFIG_PATH
-
 
 class DeepMarsDataset(Dataset):
-    def __init__(self, root_dir: str):
+    def __init__(self, root_dir: str, config_path: str):
         """
-           Initialize transforms. Extract image labels from the dataset in root_dir. 
+           Initialize transforms. Extract image labels from the dataset in root_dir.
 
            ----
 
@@ -32,7 +30,7 @@ class DeepMarsDataset(Dataset):
                 self.labels[key] = int(value)
 
         # Get image input size from config file
-        with open(CONFIG_PATH) as yaml_cfg:
+        with open(config_path) as yaml_cfg:
             config = yaml.safe_load(yaml_cfg)
             config_pytorch = config["pytorch_cnn_parameters"]
             resize_dimension = config_pytorch["crop_dimension"]
@@ -53,7 +51,7 @@ class DeepMarsDataset(Dataset):
         self.image_dir = os.path.join(root_dir, "map-proj")
         image_names = os.listdir(os.path.join(self.image_dir))
 
-        # Take set difference 
+        # Take set difference
         # to ensure that only labelled images are included
         self.image_names = list(set(image_names) & set(self.labels))
 

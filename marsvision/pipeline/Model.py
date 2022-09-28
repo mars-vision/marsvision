@@ -4,6 +4,8 @@ import pickle
 from typing import Dict
 from typing import List
 
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
@@ -17,7 +19,6 @@ from torch.nn.functional import softmax
 from torch.optim import lr_scheduler
 from torchvision import transforms
 
-from marsvision.path_definitions import CONFIG_PATH
 from marsvision.pipeline.FeatureExtractor import *
 from marsvision.vision import DeepMarsDataset
 
@@ -29,14 +30,18 @@ class Model:
     def __init__(self,
                  model,
                  model_type: str = PYTORCH,
+                 config_path: str = "data/deepmars_config.yml",
                  **kwargs):
         """
-        Model class that serves as an abstract wrapper for either an sklearn or pytorch model. Contains methods for making predictions, and for cross validating the model and writing results to a file.
+        Model class that serves as an abstract wrapper for either an sklearn or pytorch model.
+        Contains methods for making predictions, and for cross validating the model and writing results to a file.
 
         Parameters
-            model: Either an sklearn machine learning model, or a pytorch neural network. Can be a path to a file or a model object.
-            
-            model_type (str): String identifier for the type of model. Determines how the model will be trained in this class.
+            model: Either an sklearn machine learning model, or a pytorch neural network.
+            Can be a path to a file or a model object.
+
+            model_type (str): String identifier for the type of model.
+            Determines how the model will be trained in this class.
 
         kwargs:
             training_images (numpy.ndarray): Batch of images to train on 
@@ -45,8 +50,11 @@ class Model:
         """
 
         # Open config file
-        with open(CONFIG_PATH) as yaml_cfg:
+        self.scoring: List[str] = []
+        self.cv_results: Dict[str, float] = {}
+        with open(config_path) as yaml_cfg:
             self.config = yaml.safe_load(yaml_cfg)
+        self.config_path = config_path
 
         if "training_images" in kwargs:
             self.training_images = kwargs["training_images"]
@@ -67,7 +75,7 @@ class Model:
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict_proba(self, image_list: np.ndarray, input_dimension: int = None, transform=None):
+    def predict_proba(self, image_list: np.ndarray, input_dimension: int = None, transform=None) -> np.ndarray:
         """
         Run inference using self.model on a list of images using the currently instantiated model.
             
@@ -80,8 +88,12 @@ class Model:
             
             crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
             
-            input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension. If none, the dimension in the config file is used.
+            input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension.
+            If none, the dimension in the config file is used.
         """
+
+        if self.model_type != Model.SKLEARN and self.model_type != Model.PYTORCH:
+            Exception("Invalid model specified in marsvision.pipeline.Model")
 
         if self.model_type == Model.SKLEARN:
             # Iterate images in batch,
@@ -93,7 +105,7 @@ class Model:
                 image_feature_list.append(FeatureExtractor.extract_features(image))
             distribution = self.model.predict_proba(image_feature_list)
             return np.array(distribution)
-        elif self.model_type == Model.PYTORCH:
+        else:
             if input_dimension is None:
                 config_pytorch = self.config["pytorch_cnn_parameters"]
                 input_dimension = config_pytorch["input_dimension"]
@@ -128,10 +140,8 @@ class Model:
             output_tensor = self.model(input_tensor)
             output_tensor = softmax(output_tensor, dim=1)
             return np.array(output_tensor.detach().numpy())
-        else:
-            Exception("Invalid model specified in marsvision.pipeline.Model")
 
-    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform=None):
+    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform=None) -> np.ndarray:
         """
             This function serves as a wrapper for predict_proba,
             that takes as input a batch of images and outputs a list of inferences for each image.
@@ -143,11 +153,12 @@ class Model:
                 
                 crop_size: (Tuple[int, int]): Tuple containing width and height of images if they need to be cropped.
                 
-                input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension. If None, the dimension in the config file is used.
+                input_dimension: Dimension of the image sent to the neural net. input_dimension x input_dimension.
+                If None, the dimension in the config file is used.
 
         """
         distribution = self.predict_proba(image_list, input_dimension, transform)
-        return self.predict_proba(image_list).argmax(axis=1).tolist()
+        return distribution.argmax(axis=1).astype(int)
 
     def set_training_data(self, training_images: np.ndarray, training_labels: List[str]):
         """
@@ -156,8 +167,11 @@ class Model:
             ----------
 
             Parameters
-                training_images (self): List of images to train the model on. Numpy is expected to be as follows: (image count, height, image width, channels)
-                training_labels (self): Labels associated with training images. Should be a list parallel to the list of training images.
+                training_images (self): List of images to train the model on.
+                Numpy is expected to be as follows: (image count, height, image width, channels)
+
+                training_labels (self): Labels associated with training images.
+                Should be a list parallel to the list of training images.
 
         """
         self.training_images = training_images
@@ -174,9 +188,10 @@ class Model:
             self.extracted_features = [FeatureExtractor.extract_features(image) for image in self.training_images]
         except AttributeError:
             print(
-                "Training images need to be set before feature extraction. Call set_training_data to initialize training data.")
+                "Training images need to be set before feature extraction. "
+                "Call set_training_data to initialize training data.")
 
-    def cross_validate_plot(self, title: str = "Binary Cross Validation Results", n_folds: int = 2):
+    def cross_validate_plot(self, title: str = "Binary Cross Validation Results", n_folds: int = 2, show=True):
         """
             Run cross validation on a binary classification problem,
             and make a matplotlib plot of the results.
@@ -210,7 +225,9 @@ class Model:
         ax.fill_between(np.linspace(0, 1, 100), tprs_lower, tprs_upper, color='grey', alpha=.2,
                         label=r'$\pm$ 1 std. dev.')
         ax.legend()
-        plt.show()
+
+        if show:
+            plt.show()
 
         return cv_results
 
@@ -218,11 +235,15 @@ class Model:
                                       n_folds: int = 5,
                                       ax=None):
         """
-            Run cross validation on a binary classification problem on the basic pipeline, and return the results as a dictionary.
+            Run cross validation on a binary classification problem on
+            the basic pipeline, and return the results as a dictionary.
 
-            This is mainly a helper function for the cross_validate_plot function, which cross validates and plotes ROC curves for each fold.
+            This is mainly a helper function for the cross_validate_plot function,
+             which cross validates and plotes ROC curves for each fold.
 
-            This method returns the domain over which the plot is constructed as well as the tpr and fpr values, alongside standard binary classification measures for each fold: precision, recall, accuracy, auc.
+            This method returns the domain over which the plot is constructed as well as the
+            tpr and fpr values, alongside standard binary classification
+            measures for each fold: precision, recall, accuracy, auc.
 
             This method assumes that there are only two labels in the training label member of this class.
 
@@ -252,7 +273,7 @@ class Model:
         tprs = []
         x_domain = np.linspace(0, 1, 100)
 
-        for i, (train, test) in enumerate(stratified_kfold.split(self.extracted_features, self.training_labels)):
+        for _, (train, test) in enumerate(stratified_kfold.split(self.extracted_features, self.training_labels)):
             self.model.fit(x[train], y[train])
             viz = plot_roc_curve(self.model, x[test], y[test])
             plt.close()
@@ -297,7 +318,10 @@ class Model:
             ----------
 
             Parameters
-                scoring (list): List of sklearn cross validation scoring identifiers. Default: ["accuracy", "precision", "recall", "roc_auc"]. Assumes binary classification. Valid IDs are SKLearn classification identifiers. https://scikit-learn.org/stable/modules/model_evaluation.html
+                scoring (list): List of sklearn cross validation scoring identifiers.
+                Default: ["accuracy", "precision", "recall", "roc_auc"]. Assumes binary classification.
+                Valid IDs are SKLearn classification identifiers.
+                https://scikit-learn.org/stable/modules/model_evaluation.html
             
                 n_folds (int): Number of cross validation folds. Default 10.
 
@@ -319,31 +343,35 @@ class Model:
                                                  scoring=scoring, cv=skf)
             except AttributeError:
                 print(
-                    "Training data is not initialized. Call set_training_data to initialize training images and labels.")
+                    "Training data is not initialized. Call set_training_data to "
+                    "initialize training images and labels.")
         elif self.model_type == Model.PYTORCH:  # pragma: no cover
             # TODO: Implement pytorch cross validation
             raise Exception("Invalid model specified in marsvision.pipeline.Model")
 
     def write_cv_results(self, output_path: str = "cv_test_results.txt"):
         """
-            Save cross validation results to a file. Shows results for individual folds, and the mean result for all folds,
+            Save cross validation results to a file. Shows results for individual folds,
+             and the mean result for all folds,
             for all user specified classification metrics.
 
             Parameters
                 output_path (str): Path and file to write the results to.
 
         """
-        output_file = open(output_path, "w")
-        for score in self.scoring:
-            cv_score_mean = np.mean(self.cv_results["test_" + score])
-            output_file.write(score + "(all folds): " + str(self.cv_results["test_" + score]) + "\n")
-            output_file.write(score + "(mean): " + str(cv_score_mean) + "\n")
+        with open(output_path, "w") as output_file:
+            for score in self.scoring:
+                cv_score_mean = np.mean(self.cv_results["test_" + score])
+                output_file.write(score + "(all folds): " + str(self.cv_results["test_" + score]) + "\n")
+                output_file.write(score + "(mean): " + str(cv_score_mean) + "\n")
 
     def train_model(self):
         """
             Trains a classifier using this object's configuration, as specified in the constructor. 
             
-            Either an SKLearn or Pytorch model will be trained on this object's data. The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module. The Pytorch model will be trained by running a CNN on the image data.
+            Either an SKLearn or Pytorch model will be trained on this object's data.
+            The SKLearn model will be trained on extracted image features as specified in the FeatureExtractor module.
+            The Pytorch model will be trained by running a CNN on the image data.
         
             Parameters
                 root_dir (str): Root directory of the Deep Mars dataset.
@@ -364,9 +392,13 @@ class Model:
         """
             Train and evaluate a pytorch CNN model.
 
-            The model is defined in this class' constructor. If a valid pytorch model is used for this object, use this method to train a model and save evaluation information to a file. The trained model will be saved to a file path specified by the user, or directly to the current working directly by default. The information is also retained in a member variable called cnn_evaluation_results. 
+            The model is defined in this class' constructor. If a valid pytorch model is used for this object,
+            use this method to train a model and save evaluation information to a file. The trained model will be
+            saved to a file path specified by the user, or directly to the current working directly by default.
+            The information is also retained in a member variable called cnn_evaluation_results.
 
-            The data is split into train and test sets that are stratified, i.e. the class distributions are preserved between training and testing sets.
+            The data is split into train and test sets that are stratified, i.e. the class distributions are
+            preserved between training and testing sets.
 
             The evaluation data is contained in a dictionary method returns a dictionary containing these keys:
 
@@ -378,7 +410,8 @@ class Model:
 
             These dictionary members are all lists whose indices correspond to training epochs.
 
-            The various hyperparameters for CNN training, such as learning rate and number of epochs, can be found in the config file.
+            The various hyperparameters for CNN training, such as learning rate and number of epochs,
+            can be found in the config file.
 
 
             Parameters
@@ -386,9 +419,12 @@ class Model:
                 
                 out_path: (str): The directory to which files should be saved.
                 
-                num_epochs (int): Named parameter. Number of training epochs. Default values are located in the config file.
+                num_epochs (int): Named parameter. Number of training epochs. Default values
+                are located in the config file.
                 
-                test_proportion (float): Named parameter. Proportion of data to be used for model evaluation. Expected to be a value in range [0, 1]. The complement (1 - test_proportion) is used to train the model.
+                test_proportion (float): Named parameter. Proportion of data to be used for model evaluation.
+                 Expected to be a value in range [0, 1]. The complement (1 - test_proportion)
+                 is used to train the model.
 
 
         """
@@ -403,7 +439,6 @@ class Model:
         step_size = pytorch_parameters["scheduler_step_size"]
         gamma = pytorch_parameters["scheduler_gamma"]
 
-        num_classes = pytorch_parameters["num_output_classes"]
         batch_size = pytorch_parameters["batch_size"]
         num_workers = pytorch_parameters["num_workers"]
         root_dir = self.dataset_root_directory
@@ -426,7 +461,7 @@ class Model:
         criterion = nn.CrossEntropyLoss()
 
         # Instantiate the dataset using our custom DeepMarsDataset class (found in the vision folder)
-        dataset = DeepMarsDataset(root_dir)
+        dataset = DeepMarsDataset(root_dir, self.config_path)
         dataset_size = len(dataset)
         dataset_label_list = dataset.get_labels()
 
@@ -473,7 +508,7 @@ class Model:
         }
 
         for epoch in range(num_epochs):
-            print("Epoch: {}/{}".format(epoch, num_epochs - 1))
+            print(f"Epoch: {epoch}/{num_epochs - 1}")
             print("-" * 10)
 
             # Train/Val
@@ -586,7 +621,8 @@ class Model:
 
     def load_model(self, input_path: str, model_type: str):
         """
-            Loads a model into this object from a file, into the self.model member. The model can either be a Pytorch model saved via torch.save() or an SKlearn model.
+            Loads a model into this object from a file, into the self.model member.
+            The model can either be a Pytorch model saved via torch.save() or an SKlearn model.
 
             -------
 
@@ -630,7 +666,8 @@ class Model:
                 training_file (str): Path to the evaluation results file.
         """
 
-        cnn_training_results = pickle.load(open(training_file, "rb"))
+        with open(training_file, "rb") as train_f:
+            cnn_training_results = pickle.load(train_f)
 
         # eval_list will contain lists of metrics.
         # Each entry represents a set of metrics by epoch.

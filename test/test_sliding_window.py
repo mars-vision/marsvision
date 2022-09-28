@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pdsc
 import requests
+import yaml
 
-from marsvision.path_definitions import PDSC_TABLE_PATH
 from marsvision.pipeline import Model
 from marsvision.pipeline import SlidingWindow
 
@@ -24,8 +24,11 @@ class TestSlidingWindow(TestCase):
         # Get the images in test_data as a batch
         model.load_model(test_model_path, "sklearn")
 
+        config_path = "data/binary_test_config.yml"
+        with open(config_path) as yaml_cfg:
+            config = yaml.safe_load(yaml_cfg)
         # Get PDSC Metadata objects to pass into the sliding window object.
-        client = pdsc.PdsClient(PDSC_TABLE_PATH)
+        client = pdsc.PdsClient(config["dataset"]["pdsc_data"])
         test_metadata_ids = [
             "PSP_006569_1135",
             "PSP_006570_1820",
@@ -54,7 +57,7 @@ class TestSlidingWindow(TestCase):
         # If no expected db file is present, create one.
         # When we intentionally want to change database output,
         # we can delete the marsvision_expected file and run tests to create a new one.
-        sw_test = SlidingWindow(model, "marsvision.db", 256, 256, 256, 256)
+        sw_test = SlidingWindow(model, "marsvision.db", "data/binary_test_config.yml", 256, 256, 256, 256)
         if not os.path.isfile(expected_db_path):
             sw_test.db_path = expected_db_path
             sw_test.sliding_window_predict(image_list, metadata_list)

@@ -34,8 +34,6 @@ class TestDataUtility(TestCase):
         self.loader.data_transformer()
 
     def test_data_reader(self):
-        print(self.loader.images)
-        print(self.expected_loaded_images)
         self.assertTrue(np.array_equal(self.expected_loaded_images, self.loader.images))
 
     def test_data_transformer(self):

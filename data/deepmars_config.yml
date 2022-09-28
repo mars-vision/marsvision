@@ -1,5 +1,6 @@
 dataset:
   dataset_root_directory: null
+  pdsc_data: "data/pdsc_tables"
 
 training_options:
   # Set this to 'pytorch' or 'sklearn'
