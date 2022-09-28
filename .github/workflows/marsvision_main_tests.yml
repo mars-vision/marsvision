@@ -32,4 +32,4 @@ jobs:
     - name: Test with pytest
       run: |
         python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning --ignore pdsc
-        pylint marsvision
+        pylint --errors-only marsvision
