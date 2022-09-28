@@ -49,7 +49,7 @@ class SlidingWindow:
 
         # Open config file
         with open(CONFIG_PATH) as yaml_cfg:
-            self.config = yaml.load(yaml_cfg)
+            self.config = yaml.safe_load(yaml_cfg)
             self.config_sliding_window = self.config["sliding_window_parameters"]
             
         # Initialize variables with a default from the config file,

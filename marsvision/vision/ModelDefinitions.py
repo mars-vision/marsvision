@@ -4,7 +4,7 @@ from marsvision.path_definitions import CONFIG_PATH
 import torch.nn as nn
 
 with open(CONFIG_PATH) as yaml_cfg:
-    config = yaml.load(yaml_cfg)
+    config = yaml.safe_load(yaml_cfg)
 
 def alexnet_grayscale():
     num_classes = config["pytorch_cnn_parameters"]["num_output_classes"]

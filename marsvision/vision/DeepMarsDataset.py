@@ -31,7 +31,7 @@ class DeepMarsDataset(Dataset):
 
         # Get image input size from config file
         with open(CONFIG_PATH) as yaml_cfg:
-            config = yaml.load(yaml_cfg)
+            config = yaml.safe_load(yaml_cfg)
             config_pytorch = config["pytorch_cnn_parameters"]
             resize_dimension = config_pytorch["crop_dimension"]
             input_dimension = config_pytorch["input_dimension"]

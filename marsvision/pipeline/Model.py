@@ -49,7 +49,7 @@ class Model:
 
         # Open config file
         with open(CONFIG_PATH) as yaml_cfg:
-            self.config = yaml.load(yaml_cfg)
+            self.config = yaml.safe_load(yaml_cfg)
 
         if "training_images" in kwargs:
             self.training_images = kwargs["training_images"]

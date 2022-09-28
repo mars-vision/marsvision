@@ -25,7 +25,7 @@ def main(model_file, model_mode, num_samples, output_file = "marsvision.db"):
     """
     # Open config file
     with open(CONFIG_PATH) as yaml_cfg:
-        config = yaml.load(yaml_cfg)
+        config = yaml.safe_load(yaml_cfg)
         config_window = config["random_pipeline_parameters"]
         
 
