@@ -1,17 +1,19 @@
-import numpy as np
-import os 
-import cv2
-import sys
-import pandas as pd
 import argparse
-from marsvision.pipeline import FeatureExtractor
-from sklearn.preprocessing import LabelEncoder
+import os
 from typing import Optional
 
+import cv2
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+
+from marsvision.pipeline import FeatureExtractor
+
+
 class DataUtility:
-    def __init__(self, 
-            in_path: Optional[str] = None,
-            out_path: Optional[str] = None): 
+    def __init__(self,
+                 in_path: Optional[str] = None,
+                 out_path: Optional[str] = None):
         """
             This class is responsible for loading images from an input directory,
             extracting features from them, and outputting the processed data as a .csv file. 
@@ -46,12 +48,12 @@ class DataUtility:
         # Set values based on whether default parameters are set
         if not in_path:
             self.in_path = os.getcwd()
-        else: 
+        else:
             self.in_path = in_path
 
         if not out_path:
             self.out_path = os.getcwd()
-        else: 
+        else:
             self.out_path = out_path
 
     def data_reader(self):
@@ -75,7 +77,7 @@ class DataUtility:
         for root, dirs, files in walk:
             for file in files:
                 if file.endswith(".jpg"):
-                    img =  cv2.imread(os.path.join(root, file))
+                    img = cv2.imread(os.path.join(root, file))
                     if img is not None:
                         images.append(img)
                         file_names.append(file)
@@ -84,7 +86,6 @@ class DataUtility:
         self.images = np.array(images)
         self.file_names = file_names
         self.labels = labels
-
 
     def data_transformer(self):
         """
@@ -104,12 +105,11 @@ class DataUtility:
         # a list of feature vectors.
 
         self.feature_list = [FeatureExtractor.extract_features(image) for image in self.images]
-        self.df = pd.DataFrame(data = self.feature_list)
+        self.df = pd.DataFrame(data=self.feature_list)
         self.df["class"] = self.labels
         self.df["file_name"] = self.file_names
         LE = LabelEncoder()
         self.df["class_code"] = LE.fit_transform(self.df["class"])
-
 
     def data_writer(self):
         """
@@ -136,15 +136,10 @@ class DataUtility:
 
 # Read/write image data with features
 # If we run this module directly.
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     parser = argparse.ArgumentParser(description="Process input strings")
     parser.add_argument("--i", help="Input directory")
     parser.add_argument("--o", help="Output directory")
     args = parser.parse_args()
     loader = DataUtility(args.i, args.o)
     loader.run()
-
-
-
-
-

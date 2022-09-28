@@ -1,10 +1,14 @@
-import numpy as np
 import cv2
+import numpy as np
+
+
 class FeatureExtractor:
     num_features = 6
-    def extract_features(img, 
-        canny_threshold_1: int = 50, 
-        canny_threshold_2: int = 100):
+
+    @staticmethod
+    def extract_features(img,
+                         canny_threshold_1: int = 50,
+                         canny_threshold_2: int = 100):
         """
         A Feature extractor that takes an image as an input
         and outputs a vector of features by reducing the dimensionality
@@ -25,7 +29,7 @@ class FeatureExtractor:
         """
         feature_vector = []
         # Exception thrown when image is null
-        try: 
+        try:
             img = np.array(img)
             canny = cv2.Canny(img, canny_threshold_1, canny_threshold_2)
             lapl = cv2.Laplacian(img, cv2.CV_64F)

@@ -1,38 +1,35 @@
-import numpy as np
-import cv2
-from PIL import Image
-import sklearn
+import copy
 import os
-import torch
 import pickle
-import pandas as pd
-from marsvision.pipeline.FeatureExtractor import *
-from marsvision.vision import DeepMarsDataset
-from sklearn.model_selection import cross_validate, StratifiedKFold, StratifiedShuffleSplit
-from sklearn.metrics import plot_roc_curve, multilabel_confusion_matrix
+from typing import Dict
 from typing import List
+
+import matplotlib.pyplot as plt
+import pandas as pd
 import torch
-import torchvision
-from torchvision import transforms
-from torch import Tensor
+import yaml
+from PIL import Image
+from sklearn.metrics import plot_roc_curve, multilabel_confusion_matrix
+from sklearn.model_selection import cross_validate, StratifiedKFold, StratifiedShuffleSplit
 from torch import nn
 from torch import optim
 from torch.nn.functional import softmax
-import copy
 from torch.optim import lr_scheduler
-import matplotlib.pyplot as plt
+from torchvision import transforms
+
 from marsvision.path_definitions import CONFIG_PATH
-import yaml
-from typing import Dict
+from marsvision.pipeline.FeatureExtractor import *
+from marsvision.vision import DeepMarsDataset
+
 
 class Model:
     PYTORCH = "pytorch"
     SKLEARN = "sklearn"
 
-    def __init__(self, 
-        model,
-        model_type: str = PYTORCH,
-        **kwargs):
+    def __init__(self,
+                 model,
+                 model_type: str = PYTORCH,
+                 **kwargs):
         """
         Model class that serves as an abstract wrapper for either an sklearn or pytorch model. Contains methods for making predictions, and for cross validating the model and writing results to a file.
 
@@ -66,11 +63,11 @@ class Model:
             self.load_model(model, self.model_type)
         else:
             self.model = model
-        
+
         # Initialize extracted features to none; use this member when we use the sklearn model
         self.extracted_features = None
 
-    def predict_proba(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
+    def predict_proba(self, image_list: np.ndarray, input_dimension: int = None, transform=None):
         """
         Run inference using self.model on a list of images using the currently instantiated model.
             
@@ -107,7 +104,7 @@ class Model:
             transform = transforms.Compose([
                 transforms.Resize(crop_dimension),
                 transforms.CenterCrop(input_dimension),
-                transforms.ToTensor(), # normalize to [0, 1]
+                transforms.ToTensor(),  # normalize to [0, 1]
                 transforms.Normalize(
                     mean=[0.485],
                     std=[0.229],
@@ -121,7 +118,7 @@ class Model:
                 img = cv2.cvtColor(image_list[i], cv2.COLOR_RGB2GRAY)
                 img_pil = Image.fromarray(img)
                 input_tensor[i] = transform(img_pil)
-                
+
             # Output index of the maximum confidence score per sample.
             # Return the output tensor as a list.
 
@@ -134,7 +131,7 @@ class Model:
         else:
             Exception("Invalid model specified in marsvision.pipeline.Model")
 
-    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform = None):
+    def predict(self, image_list: np.ndarray, input_dimension: int = None, transform=None):
         """
             This function serves as a wrapper for predict_proba,
             that takes as input a batch of images and outputs a list of inferences for each image.
@@ -165,7 +162,7 @@ class Model:
         """
         self.training_images = training_images
         self.training_labels = training_labels
-        
+
     def set_extracted_features(self):
         """
             Run feature extraction training images defined in self.training_images.
@@ -176,9 +173,9 @@ class Model:
         try:
             self.extracted_features = [FeatureExtractor.extract_features(image) for image in self.training_images]
         except AttributeError:
-            print("Training images need to be set before feature extraction. Call set_training_data to initialize training data.")
+            print(
+                "Training images need to be set before feature extraction. Call set_training_data to initialize training data.")
 
-    
     def cross_validate_plot(self, title: str = "Binary Cross Validation Results", n_folds: int = 2):
         """
             Run cross validation on a binary classification problem,
@@ -196,18 +193,18 @@ class Model:
         cv_results = self.cross_validate_binary_metrics(n_folds, ax)
 
         fig.set_size_inches(18.5, 10.5)
-            
+
         ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05],
-        title=title)
-            
+               title=title)
+
         ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
                 label='Random Chance', alpha=.8)
-            
+
         ax.plot(np.linspace(0, 1, 100), cv_results["mean_tpr"], color='b',
-                label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (cv_results["mean_auc"], 
-                                                            cv_results["std_auc"]),
+                label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (cv_results["mean_auc"],
+                                                               cv_results["std_auc"]),
                 lw=2, alpha=.8)
-            
+
         tprs_upper = np.minimum(cv_results["mean_tpr"] + cv_results["std_tpr"], 1)
         tprs_lower = np.maximum(cv_results["mean_tpr"] - cv_results["std_tpr"], 0)
         ax.fill_between(np.linspace(0, 1, 100), tprs_lower, tprs_upper, color='grey', alpha=.2,
@@ -217,10 +214,9 @@ class Model:
 
         return cv_results
 
-
-    def cross_validate_binary_metrics(self, 
-             n_folds: int = 5,
-             ax = None):
+    def cross_validate_binary_metrics(self,
+                                      n_folds: int = 5,
+                                      ax=None):
         """
             Run cross validation on a binary classification problem on the basic pipeline, and return the results as a dictionary.
 
@@ -241,13 +237,13 @@ class Model:
 
         # Set stratified k folds using n_folds 
         stratified_kfold = StratifiedKFold(n_folds)
-        try: 
+        try:
             self.set_extracted_features()
             x = np.array(self.extracted_features)
             y = np.array(self.training_labels)
         except AttributeError:
             print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
-            
+
         precisions = []
         aucs = []
         accs = []
@@ -260,7 +256,7 @@ class Model:
             self.model.fit(x[train], y[train])
             viz = plot_roc_curve(self.model, x[test], y[test])
             plt.close()
-            visualizations.append(plot_roc_curve(self.model, x[test], y[test], ax = ax))
+            visualizations.append(plot_roc_curve(self.model, x[test], y[test], ax=ax))
             interp_tpr = np.interp(x_domain, viz.fpr, viz.tpr)
             interp_tpr[0] = 0.0
             tprs.append(interp_tpr)
@@ -275,7 +271,7 @@ class Model:
             precisions.append(true_positives / (true_positives + false_positives))
             recalls.append(true_positives / (false_negatives + true_positives))
             accs.append(np.sum(y_predict == y[test]) / len(y[test]))
-                    
+
         return {
             "precisions": precisions,
             "recalls": recalls,
@@ -291,11 +287,10 @@ class Model:
             "x_domain": x_domain
         }
 
-
-    def cross_validate(self, 
-             n_folds: int = 10,
-             scoring: list = ["accuracy", "precision", "recall", "roc_auc"], 
-            **kwargs):
+    def cross_validate(self,
+                       n_folds: int = 10,
+                       scoring: list = ["accuracy", "precision", "recall", "roc_auc"],
+                       **kwargs):
         """
             Run cross validation on the model with its training data and labels. Return the results.
 
@@ -310,24 +305,24 @@ class Model:
 
         if "scoring" in kwargs:
             self.scoring = kwargs["scoring"]
-        else: 
+        else:
             self.scoring = scoring
 
         # Set stratified k folds using n_folds parameters
         skf = StratifiedKFold(n_folds)
 
         # If no extracted features exist, set them for the sklearn model
-        if self.model_type == Model.SKLEARN:   
+        if self.model_type == Model.SKLEARN:
             self.set_extracted_features()
-            try: 
-                self.cv_results = cross_validate(self.model, self.extracted_features, self.training_labels, scoring = scoring, cv=skf)
+            try:
+                self.cv_results = cross_validate(self.model, self.extracted_features, self.training_labels,
+                                                 scoring=scoring, cv=skf)
             except AttributeError:
-                print("Training data is not initialized. Call set_training_data to initialize training images and labels.")
-        elif self.model_type == Model.PYTORCH: # pragma: no cover
+                print(
+                    "Training data is not initialized. Call set_training_data to initialize training images and labels.")
+        elif self.model_type == Model.PYTORCH:  # pragma: no cover
             # TODO: Implement pytorch cross validation
-            raise  Exception("Invalid model specified in marsvision.pipeline.Model")
-
-
+            raise Exception("Invalid model specified in marsvision.pipeline.Model")
 
     def write_cv_results(self, output_path: str = "cv_test_results.txt"):
         """
@@ -344,7 +339,6 @@ class Model:
             output_file.write(score + "(all folds): " + str(self.cv_results["test_" + score]) + "\n")
             output_file.write(score + "(mean): " + str(cv_score_mean) + "\n")
 
-        
     def train_model(self):
         """
             Trains a classifier using this object's configuration, as specified in the constructor. 
@@ -355,8 +349,8 @@ class Model:
                 root_dir (str): Root directory of the Deep Mars dataset.
         """
 
-        if self.model_type == Model.PYTORCH:   
-            self.train_model_pytorchcnn()
+        if self.model_type == Model.PYTORCH:
+            self.train_and_test_cnn()
         elif self.model_type == Model.SKLEARN:
             # Extract features from every image in the batch,
             # then fit the sklearn model to these features.
@@ -365,7 +359,6 @@ class Model:
             self.model.fit(self.extracted_features, self.training_labels)
         else:
             raise Exception("No model specified in marsvision.pipeline.Model")
-
 
     def train_and_test_cnn(self, out_path: str = None, num_epochs: int = None, test_proportion: float = None):
         """
@@ -404,21 +397,21 @@ class Model:
         # We can later add conditionals that use kwargs with the same keys,
         # to make these function calls a bit more customizable to the user.
         pytorch_parameters = self.config["pytorch_cnn_parameters"]
-        
+
         learning_rate = pytorch_parameters["gradient_descent_learning_rate"]
         momentum = pytorch_parameters["gradient_descent_momentum"]
         step_size = pytorch_parameters["scheduler_step_size"]
         gamma = pytorch_parameters["scheduler_gamma"]
-        
+
         num_classes = pytorch_parameters["num_output_classes"]
         batch_size = pytorch_parameters["batch_size"]
         num_workers = pytorch_parameters["num_workers"]
         root_dir = self.dataset_root_directory
-        
+
         # Use config file values if these are not present in kwargs
         if num_epochs is None:
             num_epochs = pytorch_parameters["num_epochs"]
-        
+
         if test_proportion is None:
             test_proportion = pytorch_parameters["test_proportion"]
 
@@ -430,7 +423,7 @@ class Model:
         optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
         # Decay by a factor of gamma every step_size epochs
         scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
-        criterion = nn.CrossEntropyLoss() 
+        criterion = nn.CrossEntropyLoss()
 
         # Instantiate the dataset using our custom DeepMarsDataset class (found in the vision folder)
         dataset = DeepMarsDataset(root_dir)
@@ -440,7 +433,6 @@ class Model:
         # Generate a stratified train/test split using labels from the dataset object.
         stratified_shufflesplit = StratifiedShuffleSplit(n_splits=1, test_size=test_proportion)
         (train_idx, test_idx) = next(stratified_shufflesplit.split(np.zeros(dataset_size), dataset_label_list))
-        
 
         # Determine the number of samples for our different sets
         num_train_samples = len(train_idx)
@@ -457,10 +449,12 @@ class Model:
 
         # Finally, instantiate the dataloaders using the samplers.
         DataLoaders = {
-            "train": torch.utils.data.DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, sampler = train_sampler),
-            "test": torch.utils.data.DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, sampler = test_sampler)
+            "train": torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,
+                                                 sampler=train_sampler),
+            "test": torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,
+                                                sampler=test_sampler)
         }
-       
+
         # Training starts here.
         # Since this run is for evaluation,
         # keep track of metrics here as well.
@@ -471,7 +465,7 @@ class Model:
         # (predicted_labels, prediction_probabilities, ground_truth_labels)
         # For use in model evaluation
         epoch_metrics: Dict[str, list] = {
-            "epoch_acc":  [],
+            "epoch_acc": [],
             "epoch_loss": [],
             "predicted_labels": [],
             "prediction_probabilities": [],
@@ -494,9 +488,7 @@ class Model:
                     epoch_metrics["predicted_labels"].append([])
                     epoch_metrics["prediction_probabilities"].append([])
                     epoch_metrics["ground_truth_labels"].append([])
-                    
-                    
-                
+
                 running_loss = 0.0
                 running_corrects = 0
 
@@ -530,7 +522,6 @@ class Model:
                         epoch_metrics["prediction_probabilities"][epoch].extend(scores_normalized.flatten().tolist())
                         epoch_metrics["ground_truth_labels"][epoch].extend(labels.flatten().tolist())
 
-
                 if phase == "train":
                     scheduler.step()
 
@@ -540,7 +531,6 @@ class Model:
                 if phase == "test":
                     epoch_metrics["epoch_loss"].append(epoch_loss)
                     epoch_metrics["epoch_acc"].append(epoch_acc)
-
 
                 print('{} loss: {:.4f} Acc: {:.4f} | Images parsed: {}'.format(
                     phase, epoch_loss, epoch_acc, data_sizes[phase]))
@@ -552,7 +542,6 @@ class Model:
                 if phase == 'test' and best_acc < epoch_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(model.state_dict())
-                    
 
         print('Best Epoch Acc: {:.4f}'.format(best_acc))
         self.model.load_state_dict(best_model_wts)
@@ -562,8 +551,8 @@ class Model:
             self.save_cnn_evaluation_results()
             self.save_model("marsvision_cnn.pt")
         else:
-            self.save_cnn_evaluation_results(os.path.join(out_path,"marsvision_cnn_evaluation.p"))
-            self.save_model(os.path.join(out_path, "marsvision_cnn.pt") )
+            self.save_cnn_evaluation_results(os.path.join(out_path, "marsvision_cnn_evaluation.p"))
+            self.save_model(os.path.join(out_path, "marsvision_cnn.pt"))
 
     def save_cnn_evaluation_results(self, out_path: str = "marsvision_cnn_evaluation.p"):
         """ 
@@ -576,7 +565,6 @@ class Model:
         """
         with open(out_path, "wb") as out_file:
             pickle.dump(self.cnn_evaluation_results, out_file)
-
 
     def save_model(self, out_path: str = "model.p"):
         """
@@ -591,11 +579,10 @@ class Model:
         if self.model_type == Model.SKLEARN:
             with open(out_path, "wb") as out_file:
                 pickle.dump(self.model, out_file)
-        elif self.model_type == Model.PYTORCH: # pragma: no cover
+        elif self.model_type == Model.PYTORCH:  # pragma: no cover
             torch.save(self.model, out_path)
         else:
             raise Exception("No model type selected in this Model object.")
-
 
     def load_model(self, input_path: str, model_type: str):
         """
@@ -670,7 +657,6 @@ class Model:
             # Epoch list will now contain accuracy, precision values, and recalls
             epoch_list.extend(precisions + recalls)
             eval_list.append(epoch_list)
-
 
         # Put together list used for dataframe headings.
         dataframe_headings = ["accuracy"]

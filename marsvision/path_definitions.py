@@ -1,4 +1,5 @@
 import os
+
 parent_dir = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir, os.pardir))
 
 CONFIG_PATH = os.path.join(

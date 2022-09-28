@@ -1,11 +1,12 @@
 import numpy as np
-import cv2
+
 from marsvision.pipeline import FeatureExtractor
 
+
 class KeypointFeatureExtractor:
-    def __init__(self, 
-            detector,
-            radius: int = 20):
+    def __init__(self,
+                 detector,
+                 radius: int = 20):
         """
             This class uses an OpenCV detector to detect keypoints on image and
             returns reduces the area around the keypoints to a vector of numerical features.
@@ -54,7 +55,7 @@ class KeypointFeatureExtractor:
         row_end = min(img.shape[0] - 1, point[0] + self.radius)
         colStart = max(0, point[1] - self.radius)
         colEnd = min(img.shape[1] - 1, point[1] + self.radius)
-        return img[row_start : row_end, colStart : colEnd]
+        return img[row_start: row_end, colStart: colEnd]
 
     def extract_keypoint_features(self, img):
         """
@@ -91,9 +92,3 @@ class KeypointFeatureExtractor:
         feature_matrix = self.extract_keypoint_features(img)
         feature_means = np.mean(feature_matrix, axis=0)
         return feature_means
-
-
-
-
-
-        
