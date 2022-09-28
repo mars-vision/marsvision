@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'marsvision'
-copyright = '2020 Michael Munje, Mariajose Corral, Iris Rafaela, Daniel Palencia'
-author = 'Michael Munje, Mariajose Corral, Iris Rafaela, Daniel Palencia'
+copyright = '2022 Michael Munje, Daniel Palencia'
+author = 'Michael Munje, Daniel Palencia'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'
