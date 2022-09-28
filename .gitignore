@@ -7,7 +7,7 @@ __pycache__/
 
 # Data
 mars-dataset/
-Prototyping/pytorch-eval
+examples/pytorch-eval
 test/test_files/marsvision.db
 pdsc/pdsc_tables
 
