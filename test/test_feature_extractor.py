@@ -1,8 +1,11 @@
-from unittest import TestCase
-from marsvision.pipeline import FeatureExtractor
-import cv2
 import os
+from unittest import TestCase
+
+import cv2
 import numpy as np
+
+from marsvision.pipeline import FeatureExtractor
+
 
 class TestFeatureExtractor(TestCase):
     def setUp(self):
@@ -15,7 +18,6 @@ class TestFeatureExtractor(TestCase):
         # for our test image from our marsFeatures.npy file
         image_path = os.path.join(os.path.dirname(__file__), "test_files", "marsface.jpg")
         self.img = cv2.imread(image_path)
-
 
     def test_feature_extractor(self):
         test_feature_vector = FeatureExtractor.extract_features(self.img)

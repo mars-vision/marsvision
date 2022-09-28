@@ -1,15 +1,14 @@
+import os
+from unittest import TestCase
+
+import numpy as np
+from pandas._testing import assert_frame_equal
 from sklearn.linear_model import LogisticRegression
-from marsvision.pipeline.ConvNet import ConvNet
-import pickle
+
 from marsvision.pipeline.Model import Model
 from marsvision.utilities import DataUtility
 from marsvision.vision.ModelDefinitions import alexnet_grayscale
-from unittest import TestCase
-import os
-import numpy as np
-import torch
-from torch import equal
-from pandas._testing import assert_frame_equal
+
 
 class TestModel(TestCase):
     def setUp(self):
@@ -26,12 +25,12 @@ class TestModel(TestCase):
         self.training_images = self.DataUtility.images
         self.labels = [1 if name == "dust" else 0 for name in self.DataUtility.labels]
         self.sklearn_logistic_regression = LogisticRegression()
-        self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", training_images = self.training_images, training_labels = self.labels)
+        self.model_sklearn = Model(self.sklearn_logistic_regression, "sklearn", training_images=self.training_images,
+                                   training_labels=self.labels)
         self.model_sklearn.train_model()
 
         self.deepmars_test_path = os.path.join(self.current_dir, "deep_mars_test_data")
-        self.model_pytorch = Model(alexnet_grayscale(), "pytorch", dataset_root_directory = self.deepmars_test_path)
-
+        self.model_pytorch = Model(alexnet_grayscale(), "pytorch", dataset_root_directory=self.deepmars_test_path)
 
     def test_save_load_inference(self):
         # Make a prediction on an image, 
@@ -46,7 +45,7 @@ class TestModel(TestCase):
         os.remove("model.p")
         test_prediction = test_model.predict(predict_image)
         self.assertEqual(test_prediction[0], expected_prediction[0])
-        
+
     def test_write_cv_results(self):
         # Run model's cross validation, save file
         results_path = os.path.join(self.current_dir, "cv_test_results.txt")
@@ -74,11 +73,10 @@ class TestModel(TestCase):
         # Run the binary cross validation routine to validate it in this test
         self.model_sklearn.cross_validate_plot(2)
 
-
     def test_pytorch_training(self):
         # Run the pytorch training method to cover it.
         # Saves two files: marsvision_cnn.pt and marsvision_cnn_evaluation.p
-        self.model_pytorch.train_and_test_cnn(num_epochs = 1, out_path = self.test_files_path)
+        self.model_pytorch.train_and_test_cnn(num_epochs=1, out_path=self.test_files_path)
 
         # Test the load_model method for a pytorch model.
         # load_model is called internally when a path to the model is provided.
@@ -104,7 +102,7 @@ class TestModel(TestCase):
 
         # If the test file does not exist, create a new one.
         # This allows us to delete the file and create a new one by running tests.
-        
+
         test_dataframe_path = os.path.join(self.test_files_path, "test_eval_dataframe.csv")
         model_results_path = os.path.join(self.test_files_path, "alexnet-results-3-19.p")
 

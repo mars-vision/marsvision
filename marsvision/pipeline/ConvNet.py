@@ -1,28 +1,22 @@
-import torch
 import torch.nn as nn
-import torch.optim as optim
-import torchvision
-import numpy as np
 import torch.nn.functional as F
-import torchvision
-import torchvision.transforms as transforms
 
 
-class ConvNet(nn.Module): # pragma: no cover
+class ConvNet(nn.Module):  # pragma: no cover
     def __init__(self):
         super(ConvNet, self).__init__()
         # Basic CNN:
         # Convolution -> Relu -> Linear transformation -> Relu ->  Output (10 features)
         self.conv = nn.Conv2d(1, 1, 3)
         self.linear = nn.Linear(26 * 26, 10)
-    
+
     def forward(self, x):
         # Define the forward pass here
         x = F.relu(self.conv(x))
         x = x.view(-1, self.num_flat_features(x))
         x = F.relu(self.linear(x))
         return x
-        
+
     def num_flat_features(self, x):
         # Image dimensionality
         # All dimensions except batch dimension

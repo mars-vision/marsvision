@@ -1,17 +1,20 @@
-from marsvision.pipeline import SlidingWindow
-from marsvision.pipeline import Model
-from marsvision.path_definitions import PDSC_TABLE_PATH
-from unittest import TestCase
-import cv2
 import os
-import pandas as pd
 import sqlite3
+from unittest import TestCase
+
+import cv2
 import numpy as np
+import pandas as pd
 import pdsc
 import requests
 
+from marsvision.path_definitions import PDSC_TABLE_PATH
+from marsvision.pipeline import Model
+from marsvision.pipeline import SlidingWindow
+
+
 class TestSlidingWindow(TestCase):
-    
+
     def test_sliding_window_predict(self):
         test_file_path = os.path.join(os.path.dirname(__file__), "test_files")
         test_model_path = os.path.join(test_file_path, "test_lr_model.p")
@@ -20,7 +23,7 @@ class TestSlidingWindow(TestCase):
 
         # Get the images in test_data as a batch
         model.load_model(test_model_path, "sklearn")
-        
+
         # Get PDSC Metadata objects to pass into the sliding window object.
         client = pdsc.PdsClient(PDSC_TABLE_PATH)
         test_metadata_ids = [
@@ -34,7 +37,7 @@ class TestSlidingWindow(TestCase):
 
         # Fill in image data from metadata
         image_list = []
-        for metadata in metadata_list: 
+        for metadata in metadata_list:
             # Get path to map projected image by using .NOMAP.
             url_suffix = metadata.file_name_specification.split(".")[0] + ".NOMAP.browse.jpg"
             url = "https://hirise-pds.lpl.arizona.edu/PDS/EXTRAS/" + url_suffix
@@ -48,7 +51,6 @@ class TestSlidingWindow(TestCase):
         test_db_path = os.path.join(test_file_path, "marsvision.db")
         expected_db_path = os.path.join(test_file_path, "marsvision_expected.db")
 
-
         # If no expected db file is present, create one.
         # When we intentionally want to change database output,
         # we can delete the marsvision_expected file and run tests to create a new one.
@@ -61,24 +63,21 @@ class TestSlidingWindow(TestCase):
 
         test_conn = sqlite3.connect(test_db_path)
         expected_conn = sqlite3.connect(expected_db_path)
-        
 
         # Asserting tables in both databases are the same
         test_global_table = pd.read_sql("SELECT * FROM global", test_conn)
         expected_global_table = pd.read_sql("SELECT * FROM global", expected_conn)
-        
+
         test_image_table = pd.read_sql("SELECT * FROM windows", test_conn)
         expected_image_table = pd.read_sql("SELECT * FROM windows", expected_conn)
 
         test_metadata_table = pd.read_sql("SELECT * FROM metadata", test_conn)
         expected_metadata_table = pd.read_sql("SELECT * FROM metadata", expected_conn)
 
-        #Remove output file; otherwise it gets appended to every time we run tests
+        # Remove output file; otherwise it gets appended to every time we run tests
         test_conn.close()
         expected_conn.close()
         os.remove(test_db_path)
         pd.testing.assert_frame_equal(test_metadata_table, expected_metadata_table)
         pd.testing.assert_frame_equal(test_image_table, expected_image_table)
         pd.testing.assert_frame_equal(test_global_table, expected_global_table)
-
-

@@ -1,25 +1,27 @@
-from marsvision.pipeline.Model import Model
-from typing import TypeVar
-import sqlite3
-import pandas as pd
-import cv2
-from typing import List
-import numpy as np
-import yaml
-import pdsc
-from pdsc.metadata import json_dumps
 import os
+import sqlite3
+from typing import List
+
+import cv2
+import numpy as np
+import pandas as pd
+import pdsc
+import yaml
+from pdsc.metadata import json_dumps
+
 from marsvision.path_definitions import CONFIG_PATH
+from marsvision.pipeline.Model import Model
+
 
 class SlidingWindow:
-    def __init__(self, model: Model, 
-        db_path: str = "marsvision.db",
-        window_length: int = 32,
-        window_height: int = 32, 
-        stride_x : int = 32, 
-        stride_y: int = 32,
-        window_output_root: str = None,
-        confidence_threshold: str = None):
+    def __init__(self, model: Model,
+                 db_path: str = "marsvision.db",
+                 window_length: int = 32,
+                 window_height: int = 32,
+                 stride_x: int = 32,
+                 stride_y: int = 32,
+                 window_output_root: str = None,
+                 confidence_threshold: str = None):
         """
             This class is responsible for running the sliding window pipeline,
             which will run through segments of an image with a window of user specified
@@ -49,22 +51,22 @@ class SlidingWindow:
 
         # Open config file
         with open(CONFIG_PATH) as yaml_cfg:
-            self.config = yaml.load(yaml_cfg)
+            self.config = yaml.safe_load(yaml_cfg)
             self.config_sliding_window = self.config["sliding_window_parameters"]
-            
+
         # Initialize variables with a default from the config file,
         # or user specified parameter.
         if confidence_threshold is None:
             self.confidence_threshold = self.config_sliding_window["confidence_threshold"]
         else:
             self.confidence_threshold = confidence_threshold
-        
+
         # Initialize window output root
         if window_output_root is None:
             self.window_output_root = self.config_sliding_window["window_output_root"]
         else:
             self.window_output_root = window_output_root
-            
+
         self.window_length = window_length
         self.window_height = window_height
         self.stride_x = stride_x
@@ -90,7 +92,6 @@ class SlidingWindow:
         self.conn = sqlite3.connect(self.db_path)
         self.create_sql_table()
         self.write_global_to_sql(metadata_list)
-        
 
         # Number of images in the given batch
         batch_size = len(image_list)
@@ -147,12 +148,13 @@ class SlidingWindow:
                 # Predict with model, store image coordinates of window in database
                 # Write the window to a SQL table.
                 # Pass the filtered list of metadata and global id's
-                confidence_score_list = self.model.predict_proba(window_list).max(axis = 1)
+                confidence_score_list = self.model.predict_proba(window_list).max(axis=1)
                 prediction_list = self.model.predict(window_list)
-                self.save_high_confidence_windows(confidence_score_list, prediction_list, metadata_filtered_list, window_list, x, y, global_id_filtered_list)
-                self.write_window_to_sql(prediction_list, metadata_filtered_list, x, y, global_id_filtered_list, confidence_score_list)
+                self.save_high_confidence_windows(confidence_score_list, prediction_list, metadata_filtered_list,
+                                                  window_list, x, y, global_id_filtered_list)
+                self.write_window_to_sql(prediction_list, metadata_filtered_list, x, y, global_id_filtered_list,
+                                         confidence_score_list)
 
-               
         # Drop duplicate metadata entries here
         # Not the cleanest way of doing this...
         drop_duplicate_query = """
@@ -167,13 +169,13 @@ class SlidingWindow:
         # We're done with the database by this point, so close the connection 
         self.conn.close()
 
-    def save_high_confidence_windows(self, 
-        confidence_score_list: List[float],
-        prediction_list: List[int],
-        metadata_list: List[object], 
-        window_list: np.ndarray, 
-        x_coord: int, y_coord: int, 
-        global_id_list: List[str]):
+    def save_high_confidence_windows(self,
+                                     confidence_score_list: List[float],
+                                     prediction_list: List[int],
+                                     metadata_list: List[object],
+                                     window_list: np.ndarray,
+                                     x_coord: int, y_coord: int,
+                                     global_id_list: List[str]):
         """
             Writes files to labelled folders.
 
@@ -209,13 +211,13 @@ class SlidingWindow:
             # Global id is the primary key of this window's corresponding
             # entry in the global table (which contains records of runs of the sliding window pipeline)
             global_id = global_id_list[i]
-            
+
             # Puts together a filename with identifying information,
             # allowing us to identify what image and what the coordinates
             # of the window are.
             filename = "{product_id}-global_id_{global_id}-pixel_coord_x_{x_coord}-pixel_coord_y_{y_coord}.png".format(
-                product_id = product_id, global_id = global_id, x_coord = x_coord, y_coord = y_coord)
-            
+                product_id=product_id, global_id=global_id, x_coord=x_coord, y_coord=y_coord)
+
             prediction_label = str(prediction_list[i])
             label_folder = os.path.join(self.window_output_root, prediction_label)
             if not os.path.exists(label_folder):
@@ -224,7 +226,6 @@ class SlidingWindow:
             output_path = os.path.join(label_folder, filename)
             window = window_list[i]
             cv2.imwrite(output_path, window)
-
 
     def create_sql_table(self):
         """
@@ -273,14 +274,14 @@ class SlidingWindow:
         product_ids = [metadata.product_id for metadata in metadata_list]
         row_count = len(metadata_list)
         image_dataframe = pd.DataFrame({
-                    "stride_length_x": [self.stride_x] * row_count,
-                    "stride_length_y": [self.stride_y] * row_count,
-                    "window_length": [self.window_length] * row_count,
-                    "window_height": [self.window_height] * row_count,
-                    "model_type": [self.model.model_type] * row_count,
-                    "product_id": product_ids,
-                    "observation_id": observation_ids
-            }
+            "stride_length_x": [self.stride_x] * row_count,
+            "stride_length_y": [self.stride_y] * row_count,
+            "window_length": [self.window_length] * row_count,
+            "window_height": [self.window_height] * row_count,
+            "model_type": [self.model.model_type] * row_count,
+            "product_id": product_ids,
+            "observation_id": observation_ids
+        }
         )
         image_dataframe.to_sql('global', con=self.conn, if_exists="append", index=False)
 
@@ -302,23 +303,25 @@ class SlidingWindow:
         """
         # json_dumps is part of the pdsc API. Parses a PDSC metadata object to JSON format.
         metadata_dataframe = pd.read_json(json_dumps(metadata_list))
-        
+
         # Dates are formatted as weird JSON objects.
         # These lines extract the formatted string.
         # E.g. 2007-09-23T00:22:40.000000'
-        metadata_dataframe["start_time"] = metadata_dataframe["start_time"].apply(lambda datedict: datedict["__datetime__"]["__val__"])
-        metadata_dataframe["observation_start_time"] = metadata_dataframe["observation_start_time"].apply(lambda datedict: datedict["__datetime__"]["__val__"])
-        metadata_dataframe["stop_time"] = metadata_dataframe["stop_time"].apply(lambda datedict: datedict["__datetime__"]["__val__"])
+        metadata_dataframe["start_time"] = metadata_dataframe["start_time"].apply(
+            lambda datedict: datedict["__datetime__"]["__val__"])
+        metadata_dataframe["observation_start_time"] = metadata_dataframe["observation_start_time"].apply(
+            lambda datedict: datedict["__datetime__"]["__val__"])
+        metadata_dataframe["stop_time"] = metadata_dataframe["stop_time"].apply(
+            lambda datedict: datedict["__datetime__"]["__val__"])
 
         # Typecasting everything to str avoids errors in the to_sql call.
-        metadata_dataframe = metadata_dataframe.applymap(str)
+        metadata_dataframe = metadata_dataframe.astype(str)
 
         # Write to the metadata table.
         metadata_dataframe.to_sql('metadata', con=self.conn, if_exists="append", index=False)
 
-
-
-    def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int, global_id_list: np.ndarray, confidence_scores: float):
+    def write_window_to_sql(self, prediction_list: List[int], metadata_list, window_coord_x: int, window_coord_y: int,
+                            global_id_list: np.ndarray, confidence_scores: float):
         """
             Write a batch of inferences to the database. Include information about the window's location in its parent image,
             as well as a reference key to the parent image in the global table.
@@ -343,31 +346,31 @@ class SlidingWindow:
         for metadata in metadata_list:
             # Put together lists of tuples: (latitude, longitude)
             latlong_min.append(self.get_coordinates_from_metadata(metadata, window_coord_x, window_coord_y))
-            latlong_max.append(self.get_coordinates_from_metadata(metadata, window_coord_x + self.window_length, window_coord_y + self.window_height))
+            latlong_max.append(self.get_coordinates_from_metadata(metadata, window_coord_x + self.window_length,
+                                                                  window_coord_y + self.window_height))
 
         # Rearrange the list of coordinate pairs so that we have a tuple of latitudes,
         # and a tuple of longitudes.
         latlong_min = list(zip(*latlong_min))
         latlong_max = list(zip(*latlong_max))
 
-
         # Put together parallel lists to pass to the dataframe
         min_latitudes = latlong_max[0]
         min_longitudes = latlong_min[1]
         max_latitudes = latlong_min[0]
         max_longitudes = latlong_max[1]
-        
+
         row_count = len(prediction_list)
         window_dataframe = pd.DataFrame({
-                    "prediction": prediction_list,
-                    "pixel_coord_x": [window_coord_x] * row_count,
-                    "pixel_coord_y": [window_coord_y] *row_count,
-                    "global_id": global_id_list,
-                    "minimum_longitude": min_longitudes,
-                    "minimum_latitude": min_latitudes,
-                    "maximum_longitude": max_longitudes,
-                    "maximum_latitude": max_latitudes,
-                    "confidence_score": confidence_scores
-                },
+            "prediction": prediction_list,
+            "pixel_coord_x": [window_coord_x] * row_count,
+            "pixel_coord_y": [window_coord_y] * row_count,
+            "global_id": global_id_list,
+            "minimum_longitude": min_longitudes,
+            "minimum_latitude": min_latitudes,
+            "maximum_longitude": max_longitudes,
+            "maximum_latitude": max_latitudes,
+            "confidence_score": confidence_scores
+        },
         )
         window_dataframe.to_sql('windows', con=self.conn, if_exists="append", index=False)

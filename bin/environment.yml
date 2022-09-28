@@ -1,0 +1,26 @@
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python
+  - pytorch
+  - torchvision
+  - cudatoolkit
+  - numpy
+  - pip
+  - pip:
+    - coveralls
+    - matplotlib
+    - mypy
+    - opencv-python
+    - pandas
+    - pdsc
+    - Pillow
+    - pytorch-sphinx-theme
+    - pylint
+    - pytest
+    - pytest-cov
+    - Sphinx
+    - scikit-learn
+    - scipy
+    - tensorboard

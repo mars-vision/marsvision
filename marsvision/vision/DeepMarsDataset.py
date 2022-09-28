@@ -1,10 +1,12 @@
 import os
+
+import yaml
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-from torch import Tensor
-import yaml
+
 from marsvision.path_definitions import CONFIG_PATH
+
 
 class DeepMarsDataset(Dataset):
     def __init__(self, root_dir: str):
@@ -17,10 +19,10 @@ class DeepMarsDataset(Dataset):
 
            root_dir (str): Root directory of the Deep Mars dataset.
         """
-  
+
         # All pre-trained models expect input images normalized in this way:
         #  https://pytorch.org/vision/stable/models.html
-        
+
         # Get image labels
         self.labels = {}
         with open(os.path.join(root_dir, "labels-map-proj.txt")) as f:
@@ -31,7 +33,7 @@ class DeepMarsDataset(Dataset):
 
         # Get image input size from config file
         with open(CONFIG_PATH) as yaml_cfg:
-            config = yaml.load(yaml_cfg)
+            config = yaml.safe_load(yaml_cfg)
             config_pytorch = config["pytorch_cnn_parameters"]
             resize_dimension = config_pytorch["crop_dimension"]
             input_dimension = config_pytorch["input_dimension"]
@@ -40,13 +42,13 @@ class DeepMarsDataset(Dataset):
         self.transform = transforms.Compose([
             transforms.Resize(resize_dimension),
             transforms.CenterCrop(input_dimension),
-            transforms.ToTensor(), # normalize to [0, 1]
+            transforms.ToTensor(),  # normalize to [0, 1]
             transforms.Normalize(
                 mean=[0.485],
                 std=[0.229],
             ),
         ])
-                
+
         # Get image filenames
         self.image_dir = os.path.join(root_dir, "map-proj")
         image_names = os.listdir(os.path.join(self.image_dir))
@@ -60,7 +62,7 @@ class DeepMarsDataset(Dataset):
         for image_name in self.image_names:
             labels.append(self.labels[image_name])
         return labels
-                                  
+
     def __getitem__(self, idx: int):
         """
             Returns an item in the dataset as a dictionary:
@@ -73,15 +75,15 @@ class DeepMarsDataset(Dataset):
 
         # Use convert because some of the images in the dataset are in grayscale.
         img = Image.open(os.path.join(self.image_dir, img_name)).convert("L")
-        
+
         # Apply image preprocessing
         img = self.transform(img)
-    
+
         return {
             "image": img,
             "label": self.labels[self.image_names[idx]],
             "filename": self.image_names[idx]
         }
-        
+
     def __len__(self):
         return len(self.image_names)

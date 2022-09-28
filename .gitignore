@@ -7,10 +7,11 @@ __pycache__/
 
 # Data
 mars-dataset/
-Prototyping/pytorch-eval
+examples/pytorch-eval
 test/test_files/marsvision.db
-pdsc/pdsc_tables
-
+data/pdsc_tables/
+marsvision-window-output/
+marsvision.egg-info/
 
 #VSCode
 .vscode/*
@@ -32,6 +33,8 @@ pdsc/pdsc_tables
 .dmypy.json
 dmypy.json
 
+data/pdsc/*
+.idea
 
 # Pytorch and pickle files (.pt and p)
 *.p

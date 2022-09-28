@@ -1,8 +1,11 @@
-from unittest import TestCase
-from marsvision.pipeline import KeypointFeatureExtractor
-import cv2
 import os
+from unittest import TestCase
+
+import cv2
 import numpy as np
+
+from marsvision.pipeline import KeypointFeatureExtractor
+
 
 class TestKeypointFeatureExtractor(TestCase):
     def setUp(self):
@@ -17,7 +20,7 @@ class TestKeypointFeatureExtractor(TestCase):
 
     def test_keypoint_feature_matrix_KAZE(self):
         # Extract features, compare to expected features
-        detector  = cv2.KAZE_create()
+        detector = cv2.KAZE_create()
         extractor = KeypointFeatureExtractor(detector, self.radius)
         test_features = extractor.extract_keypoint_features(self.img)
         self.assertTrue(np.array_equal(self.expected_feature_matrix_KAZE, test_features))

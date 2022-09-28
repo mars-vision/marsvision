@@ -1,12 +1,12 @@
 from setuptools import setup
 
 setup(
-    version="0,1",
+    version="0.2",
     name="marsvision",
-    description="Mars Vision",
+    description="Tool for analyzing the surface of Mars using machine learning models.",
     url="https://github.com/mars-vision/marsvision",
-    author="Michael Munje, Daniel Palencia, Mariajose Corral",
-    author_email="dpalencia2112@gmail.com",
+    author="Michael Munje, Daniel Palencia",
+    author_email="michaelmunje@gmail.com",
     license="MIT",
     packages=["marsvision"],
     zip_safe=False

@@ -1,28 +1,30 @@
-from unittest import TestCase
-from marsvision.utilities import DataUtility
-from marsvision.pipeline import FeatureExtractor
 import os
-import numpy as np
+from unittest import TestCase
+
 import cv2
+import numpy as np
 import pandas as pd
-from pandas._testing import assert_frame_equal
+
+from marsvision.pipeline import FeatureExtractor
+from marsvision.utilities import DataUtility
+
 
 class TestDataUtility(TestCase):
     def setUp(self):
         # Instantiate loader and set working directory
         self.current_dir = os.path.dirname(__file__)
         self.test_image_path = os.path.join(self.current_dir, "test_data")
-        
+
         # For testing data loader with provided paths
         self.loader = DataUtility(self.test_image_path, self.test_image_path)
-        
+
         # Manually load a list of images and to test against the loader
         self.expected_loaded_images = []
         walk = os.walk(self.test_image_path, topdown=True)
         for root, dirs, files in walk:
             for file in files:
                 if file.endswith(".jpg"):
-                    img =  cv2.imread(os.path.join(root, file))
+                    img = cv2.imread(os.path.join(root, file))
                     if img is not None:
                         self.expected_loaded_images.append(img)
 
@@ -30,7 +32,6 @@ class TestDataUtility(TestCase):
         self.expected_features = [FeatureExtractor.extract_features(image) for image in self.expected_loaded_images]
         self.loader.data_reader()
         self.loader.data_transformer()
-        
 
     def test_data_reader(self):
         print(self.loader.images)
@@ -49,6 +50,3 @@ class TestDataUtility(TestCase):
         test_df = pd.read_csv(output_csv_path)
         os.remove(output_csv_path)
         np.testing.assert_array_equal(expected_df.sort_values(by="0").values, test_df.sort_values(by="0").values)
-
-    
-
