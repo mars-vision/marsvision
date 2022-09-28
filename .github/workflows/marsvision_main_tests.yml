@@ -20,8 +20,7 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda env update --file bin/environment.yml --name marsvision
-        conda activate marsvision
+        conda env update --file bin/environment.yml
     - name: PDSC
       run: |
         mkdir data/pdsc_tables
