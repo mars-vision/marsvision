@@ -18,27 +18,9 @@ jobs:
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
-    # - name: Install dependencies
-      #run: |
-        # conda env update --file environment.yml --name base
-    - name: Scientific Packages
+    - name: Install dependencies
       run: |
-        conda install -y --quiet --yes numpy pandas pytorch 
-        conda install -y --quiet --yes pillow tensorboard scikit-learn
-        conda install -y --quiet --yes mypy scipy matplotlib
-        conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
-        pip install pytorch-lightning
-        pip install opencv-python
-    - name: General Codebase Packages
-      run: |
-        conda install flake8
-        conda install -y --quiet --yes pytest pytest-cov
-        pip install coveralls
-        pip install sphinx
-        pip install pytorch_sphinx_theme
-        pip install mypy
-        pip install exif
-        pip install pyyaml==5.4.1
+        conda env update --file bin/environment.yml --name marsvision
     - name: PDSC
       run: |
         pip install pdsc
