@@ -33,3 +33,4 @@ jobs:
       run: |
         python -m pytest --cov=marsvision/ -W ignore::DeprecationWarning --ignore pdsc
         pylint --errors-only marsvision
+        mypy marsvision
