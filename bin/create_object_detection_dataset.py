@@ -40,10 +40,16 @@ class CreateObjectDetectionDataset:
         np.random.seed(random_seed)
 
         self.positive_output_dir = os.path.join(self.output_dir, 'positive')
+        self.pos_raw_dir = os.path.join(self.positive_output_dir, 'raw')
+        self.pos_enhanced_dir = os.path.join(self.positive_output_dir, 'enhanced')
+
         self.negative_output_dir = os.path.join(self.output_dir, 'negative')
+        self.neg_raw_dir = os.path.join(self.negative_output_dir, 'raw')
+        self.neg_enhanced_dir = os.path.join(self.negative_output_dir, 'enhanced')
 
         self.pos_dataframe_path = os.path.join(self.positive_output_dir, 'positive_output.csv')
         self.neg_dataframe_path = os.path.join(self.negative_output_dir, 'negative_output.csv')
+        self.combined_dataframe_path = os.path.join(self.output_dir, 'combined_output.csv')
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -52,10 +58,14 @@ class CreateObjectDetectionDataset:
             if os.path.exists(self.positive_output_dir):
                 shutil.rmtree(self.positive_output_dir)
             os.makedirs(self.positive_output_dir)
+            os.makedirs(self.pos_raw_dir)
+            os.makedirs(self.pos_enhanced_dir)
         if get_negatives:
             if os.path.exists(self.negative_output_dir):
                 shutil.rmtree(self.negative_output_dir)
             os.makedirs(self.negative_output_dir)
+            os.makedirs(self.neg_raw_dir)
+            os.makedirs(self.neg_enhanced_dir)
 
         self.positive_df = pd.DataFrame(columns=['impact_id', 'observation_id', 'lat', 'lon', 'diameter_in_m',
                                           'xmin', 'xmax', 'ymin', 'ymax', 'xmin_px', 'xmax_px', 'ymin_px', 'ymax_px',
@@ -71,6 +81,12 @@ class CreateObjectDetectionDataset:
         if self.get_negatives:
             self.process_negative_data()
             self.negative_df.to_csv(self.neg_dataframe_path, index=False)
+        if not self.get_positives and os.path.exists(self.pos_dataframe_path):
+            self.positive_df = pd.read_csv(self.pos_dataframe_path)
+        if not self.get_negatives and os.path.exists(self.neg_dataframe_path):
+            self.negative_df = pd.read_csv(self.neg_dataframe_path)
+        self.combined_df = pd.concat([self.positive_df, self.negative_df])
+        self.combined_df.to_csv(self.combined_dataframe_path, index=False)
 
     def read_latlon_data(self, latlon_file):
         latlon_df = pd.read_csv(latlon_file)
@@ -131,9 +147,11 @@ class CreateObjectDetectionDataset:
             return
 
         if is_positive:
-            current_dir = os.path.join(self.positive_output_dir, str(current_impact_id))
+            current_raw_dir = self.pos_raw_dir
+            current_enh_dir = self.pos_enhanced_dir
         else:
-            current_dir = os.path.join(self.negative_output_dir, str(current_impact_id))
+            current_raw_dir = self.neg_raw_dir
+            current_enh_dir = self.neg_enhanced_dir
         y, x = self.get_yx_from_metadata(curr_metadata, lat, lon)
         image = self.get_image_from_metadata(curr_metadata)
         h, w = image.shape[0], image.shape[1]
@@ -170,9 +188,9 @@ class CreateObjectDetectionDataset:
         image[bb_y_top_max:bb_y_bottom_max, bb_x_right_max : bb_x_right_max + bb_thickness, :] = red
         image_bb = Image.fromarray(image)
 
-        raw_imagepath = os.path.join(current_dir, observation_id + '.png')
-        cropped_imagepath = os.path.join(current_dir, observation_id + '_cropped.png')
-        bb_imagepath = os.path.join(current_dir, observation_id + '_bounding_box.png')
+        raw_imagepath = os.path.join(current_raw_dir, observation_id + '.png')
+        cropped_imagepath = os.path.join(current_enh_dir, observation_id + '_cropped.png')
+        bb_imagepath = os.path.join(current_enh_dir, observation_id + '_bounding_box.png')
 
         new_row = {'impact_id': current_impact_id, 'observation_id': observation_id,
                                       'lat': lat, 'lon': lon, 'diameter_in_m': diameter, 'xmin': bb_x_left_max / w,
@@ -196,8 +214,6 @@ class CreateObjectDetectionDataset:
     def latlon_to_images(self, lat, lon, diameter, after_img_date, current_impact_id):
         observation_ids = self.get_all_overlapping_observations(lat, lon)
         metadata = self.client.query_by_observation_id("hirise_rdr", observation_ids)
-        current_dir = os.path.join(self.positive_output_dir, str(current_impact_id))
-        os.makedirs(current_dir)
         after_img_date = datetime.strptime(after_img_date, '%Y-%m-%d')
         for i, observation_id in enumerate(observation_ids):
             self.process_object(current_impact_id, observation_id, metadata[i], lat, lon,
@@ -223,6 +239,7 @@ class CreateObjectDetectionDataset:
         # disable silly sklearn warnings so we can see progress more easily
         warnings.filterwarnings("ignore")
         num_rows = self.latlon_df.shape[0]
+
         for i in tqdm.tqdm(range(num_rows)):
             row = self.latlon_df.iloc[i]
             lat = row['Latitude (deg E, centric)']
@@ -231,8 +248,6 @@ class CreateObjectDetectionDataset:
             after_img_date = row['After Image Date']
             current_impact_id = i
             self.latlon_to_images(lat, lon, diameter, after_img_date, current_impact_id)
-            if i == 5:
-                break
 
     def process_negative_data(self):
         random_metadata = self.get_random_metadata_items(self.n_negative_samples)
@@ -240,8 +255,6 @@ class CreateObjectDetectionDataset:
 
         for i in tqdm.tqdm(range(self.n_negative_samples)):
             current_impact_id = -i - 1
-            current_dir = os.path.join(self.negative_output_dir, str(current_impact_id))
-            os.makedirs(current_dir)
             metadata = random_metadata[i]
             image = self.get_image_from_metadata(metadata)
             h, w = image.shape[0], image.shape[1]
@@ -279,7 +292,7 @@ class CreateObjectDetectionDataset:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--latlon_file', type=str, default='latlon.txt')
+    parser.add_argument('--latlon_file', type=str, default='latlon_data.csv')
     parser.add_argument('--pdsc_table_path', type=str, default='data/pdsc_tables')
     parser.add_argument('--output_dir', type=str, default='data/test_set')
     parser.add_argument('--get_positives', action='store_true', default=False)
